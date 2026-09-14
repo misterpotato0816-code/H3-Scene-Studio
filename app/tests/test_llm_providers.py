@@ -295,7 +295,7 @@ class FallbackDisciplineTest(unittest.TestCase):
         self.assertEqual(
             [(a["kind"], a["model"]) for a in
              ai_settings.resolve_role_chain(plain, "director")],
-            [("gemma", "")])
+            [])
 
 
 # ------------------------------------------------------------- fake servers --
@@ -783,7 +783,9 @@ class PipelineProviderProfileTest(unittest.TestCase):
         self.assertTrue(kwargs.get("images"))
 
     def test_gemma_connection_never_calls_provider(self):
-        pipeline = self._pipeline(ai_settings.normalize(None))
+        clean = ai_settings.normalize(None)
+        clean["connection"] = {"kind": "local", "provider": "comfy_gemma"}
+        pipeline = self._pipeline(clean)
         runner = SimpleNamespace(state={})
         with patch("h3app.llm_providers.build_adapter") as mock_build:
             result = _run(pipeline._try_provider_profile(runner, ["a.png"]))
@@ -831,7 +833,9 @@ class PipelineProviderProfileTest(unittest.TestCase):
         self.assertEqual(sorted(released), [["m1"], ["m2"]])
 
     def test_release_skips_gemma_without_adapter(self):
-        pipeline = self._pipeline(ai_settings.normalize(None))
+        clean = ai_settings.normalize(None)
+        clean["connection"] = {"kind": "local", "provider": "comfy_gemma"}
+        pipeline = self._pipeline(clean)
         with patch("h3app.llm_providers.build_adapter") as mock_build:
             _run(pipeline._release_local_llm())
         mock_build.assert_not_called()

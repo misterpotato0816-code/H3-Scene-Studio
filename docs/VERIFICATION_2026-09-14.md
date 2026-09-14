@@ -33,12 +33,13 @@
 
 ## LLM 接続先
 
+- 既定の接続先は LM Studio（`connection.provider = lmstudio`）、Gemma フォールバックは OFF。ComfyUI-llama-cpp を導入していない構成で、単発生成・続き・ストーリーの監督案と人物解析が設定済みプロバイダーで動くことを単体テスト（モック）で確認。未設定のまま生成すると「設定 > LLM接続」への案内で停止し、他のプロバイダーへは送らない。ComfyUI-llama-cpp 無しでの実動画生成は未確認。
 - 実接続を確認: OpenCode Go、LM Studio（モデル一覧・接続テスト・画像入力・監督案生成）。
 - モックテストのみ: OpenAI / Anthropic / Google Gemini / OpenRouter / 外部 OpenAI 互換、Ollama / llama.cpp server / vLLM / LocalAI。
 
 ## 自動テスト（公開版のツリー）
 
-- `app/server.py --selftest` PASSED、`backend/h3_v2/tests_v2.py` 49 passed、`unittest discover -s app/tests` 352 OK、`scripts/prepublish-check.ps1` PASS。
+- `app/server.py --selftest` PASSED、`backend/h3_v2/tests_v2.py` 49 passed、`unittest discover -s app/tests` 370 OK、`scripts/prepublish-check.ps1` PASS。
 - 新規の Python 環境（torch / cv2 なし）でも import・設定例の読込・selftest・単体テストが通ることを確認（動画生成は未確認）。
 
 ## 日本語音声

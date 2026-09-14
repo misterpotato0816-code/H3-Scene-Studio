@@ -308,9 +308,13 @@ class ShutdownSequence:
             candidates.append((int(self.cfg.comfy_port), procstate.ROLE_COMFYUI))
         except Exception:                                        # noqa: BLE001
             pass
-        target = lmstudio_target(self.cfg)
-        if target is not None:
-            candidates.append((int(target["port"]), procstate.ROLE_LMSTUDIO))
+        stop_lm_studio = bool(
+            (self.cfg.get("shutdown") or {}).get("stop_lm_studio", True))
+        if stop_lm_studio:
+            target = lmstudio_target(self.cfg)
+            if target is not None:
+                candidates.append(
+                    (int(target["port"]), procstate.ROLE_LMSTUDIO))
         for port, role in candidates:
             if port in seen:
                 continue

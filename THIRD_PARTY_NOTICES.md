@@ -15,7 +15,7 @@
 | ソフトウェア | 用途 | ライセンス | 入手先 |
 |---|---|---|---|
 | ComfyUI | 生成エンジン本体（H3 は HTTP/WebSocket で接続。`custom_nodes/H3-Device-Barrier` は ComfyUI 内で動くカスタムノード） | GPL-3.0 | https://github.com/Comfy-Org/ComfyUI |
-| ComfyUI-llama-cpp（`llama_cpp_model_loader` / `llama_cpp_parameters` / `llama_cpp_instruct_adv` / `llama_cpp_unload_model`） | ComfyUI 内蔵ローカル LLM（接続先「ComfyUI内ローカルGemma」と、他プロバイダー失敗時の代替）。LM Studio 等を接続先にし、「失敗した場合はComfyUI内Gemmaで続行する」を OFF にすれば不要 | **ライセンス表記なし**（配布元リポジトリの GitHub 表示・Comfy Registry・pyproject・README のいずれにもライセンス種別が無く、pyproject が参照する `LICENSE` ファイルも未収録。2026-09-14 再確認） | https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm （Comfy Registry 名: comfyui-llama-cpp） |
+| ComfyUI-llama-cpp（`llama_cpp_model_loader` / `llama_cpp_parameters` / `llama_cpp_instruct_adv` / `llama_cpp_unload_model`） | ComfyUI 内蔵ローカル LLM（接続先「ComfyUI内ローカルGemma」と、他プロバイダー失敗時の代替）。**2026-09-14 以降の既定設定**（`connection.provider = lmstudio`、`gemma_fallback = false`）**はこのパックを使いません**。LM Studio 等を接続先にしたまま「失敗した場合はComfyUI内Gemmaで続行する」を OFF（既定）にしておけば不要 | **ライセンス表記なし**（配布元リポジトリの GitHub 表示・Comfy Registry・pyproject・README のいずれにもライセンス種別が無く、pyproject が参照する `LICENSE` ファイルも未収録。2026-09-14 再確認） | https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm （Comfy Registry 名: comfyui-llama-cpp） |
 | ComfyUI_LayerStyle（`LayerUtility: PurgeVRAM V2` / `ImageScaleByAspectRatio V2`） | VRAM 解放・参照画像のリサイズ | MIT | https://github.com/chflame163/ComfyUI_LayerStyle |
 | ComfyUI-SeedVR2_VideoUpscaler（任意、AI 高画質化） | SeedVR2 による動画アップスケール | Apache-2.0 | https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler |
 | FFmpeg / ffprobe | 動画結合・つなぎ目補正・標準拡大 | LGPL-2.1+ / GPL（ビルド構成による） | https://ffmpeg.org/ |
@@ -30,7 +30,7 @@
 |---|---|---|---|
 | MiniMax H3（`minimax_h3_ref2va_pruned_int8_convrot.safetensors`、`qwen3vl_32b_minimax_h3_int8_convrot.safetensors`、`minimax_h3_video_vae_fp16.safetensors`、`minimax_h3_audio_vae_fp32.safetensors`） | 動画・音声生成の本体 | **MiniMax H3 Community License Agreement**（年間売上 2,000 万米ドル超の商用利用は別途許諾、Acceptable Use Policy と適用地域の制限あり） | https://huggingface.co/Comfy-Org/MiniMax-H3 、ライセンス本文 https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE |
 | MiniMax H3 Turbo LoRA（`minimax_h3_turbo_v4_step600_ema.safetensors`） | FAST/LONG_FAST の高速化 | Apache-2.0（モデルカード記載） | https://huggingface.co/larryvrh/MiniMax-H3-Turbo-Lora |
-| Gemma 4 系 GGUF（既定設定の `gemma-4-E4B-it-*.gguf`、LM Studio 経由の `google/gemma-4-12b-qat` など） | ローカル LLM（監督案・人物解析） | **Gemma Terms of Use**（https://ai.google.dev/gemma/terms ）と Prohibited Use Policy。第三者の派生（量子化・微調整）版はその配布元の表記も確認 | Google / 各配布元 |
+| Gemma 4 系 GGUF（`gemma-4-E4B-it-*.gguf`、任意。「ComfyUI内ローカルGemma」プロバイダーを選ぶ場合のみ。LM Studio 経由で使う `google/gemma-4-12b-qat` などはこの節の対象外） | ローカル LLM（監督案・人物解析、任意） | **Gemma Terms of Use**（https://ai.google.dev/gemma/terms ）と Prohibited Use Policy。第三者の派生（量子化・微調整）版はその配布元の表記も確認 | Google / 各配布元 |
 | RealESRGAN（`RealESRGAN_x4plus.pth`） | AI 高画質化（任意） | BSD-3-Clause | https://github.com/xinntao/Real-ESRGAN |
 | SeedVR2（`seedvr2_ema_7b_fp16.safetensors`、`ema_vae_fp16.safetensors`） | AI 高画質化（任意） | Apache-2.0（モデルカード記載） | https://huggingface.co/numz/SeedVR2_comfyUI |
 
@@ -47,7 +47,7 @@ MiniMax H3 Community License Agreement は、再配布時のライセンス提�
 ### ライセンス表記のない外部ノードについて
 
 - **ComfyUI_Comfyroll_CustomNodes への依存は解消済み**: 参照画像のコンタクトシート作成（`CR Image Grid Panel`）を ComfyUI 標準の `ImageStitch` ノードに置き換えました（2026-09-14、実 ComfyUI 0.34.5 で 1〜4 枚の合成を確認）。導入不要です。
-- **ComfyUI-llama-cpp は未解決**: 配布元にライセンス表記がありません（上表）。H3 はこのパックを同梱・再配布せず、ComfyUI 上のノード名で呼び出すだけですが、「同梱しないこと」と「利用条件が明確であること」は別です。利用は各配布元の条件（表記が無い場合は著作権者の許諾範囲）に従って各自で判断してください。ライセンス表記を依頼する問い合わせ文案は `docs/LICENSE_INQUIRY_DRAFT.md` にあります（未送信）。このパックを使わない構成（LM Studio / Ollama / llama.cpp server / vLLM / LocalAI / 外部 API を接続先にし、Gemma フォールバックを OFF）でも H3 は動作します。
+- **ComfyUI-llama-cpp は未解決**: 配布元にライセンス表記がありません（上表）。H3 はこのパックを同梱・再配布せず、ComfyUI 上のノード名で呼び出すだけですが、「同梱しないこと」と「利用条件が明確であること」は別です。利用は各配布元の条件（表記が無い場合は著作権者の許諾範囲）に従って各自で判断してください。ライセンス表記を依頼する問い合わせ文案は `docs/LICENSE_INQUIRY_DRAFT.md` にあります（未送信）。**2026-09-14 以降の既定設定**（`connection.provider = lmstudio`、`gemma_fallback = false`）**はこのパックを使いません**。このパックが必要になるのは、接続先に「ComfyUI内ローカルGemma」を明示的に選ぶか、「失敗した場合はComfyUI内Gemmaで続行する」を自分で ON にした場合だけです。
 
 ## 4. 出力物について
 

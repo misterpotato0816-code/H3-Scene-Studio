@@ -8,7 +8,7 @@ Stored shape (config["ai_settings"], schema 2, secrets NEVER included):
              "character_profile": {"override": bool, "provider": "", "model": ""}},
    "providers": {"<provider_id>": {"base_url": "", "model": "",
                                    "vision_models": [], "extra": {}}},
-   "gemma_fallback": True, "max_attempts": 3, "favorites": []}
+   "gemma_fallback": False, "max_attempts": 3, "favorites": []}
 
 `connection` is the default target. A role with override=false uses the
 connection (model from providers[connection.provider]); override=true uses
@@ -19,9 +19,10 @@ Old shape (no schema, director.provider in gemma|openai_compat|opencode_go,
 local_server.base_url) is auto-migrated by normalize():
 gemma->comfy_gemma, openai_compat->lmstudio, opencode_go->opencode_go.
 
-Fallback order: primary -> local Gemma (when gemma_fallback). A local
-failure never reaches an external provider. External auth errors stop
-immediately (no Gemma fallback: the key itself is wrong).
+Fallback order: primary -> local Gemma (only when gemma_fallback is
+explicitly enabled; it is OFF by default). A local failure never reaches
+an external provider. External auth errors stop immediately (no Gemma
+fallback: the key itself is wrong).
 """
 from __future__ import annotations
 
@@ -104,7 +105,7 @@ def _default_providers() -> dict:
             for pid in _known_provider_ids()}
 
 
-DEFAULT_CONNECTION = {"kind": "local", "provider": "comfy_gemma"}
+DEFAULT_CONNECTION = {"kind": "local", "provider": "lmstudio"}
 
 DEFAULT_SETTINGS = {
     "schema": SCHEMA_VERSION,
@@ -115,7 +116,7 @@ DEFAULT_SETTINGS = {
                               "model": ""},
     },
     "providers": _default_providers(),
-    "gemma_fallback": True,
+    "gemma_fallback": False,
     "max_attempts": 3,
     "favorites": [],
 }
@@ -200,7 +201,7 @@ def _normalize_new(raw: dict) -> dict:
         raw.get("connection"), dict) else {}
     provider = _map_provider(connection.get("provider"))
     if not provider:
-        provider = "comfy_gemma"
+        provider = "lmstudio"
     merged["connection"] = {"kind": kind_of(provider),
                             "provider": provider}
 
@@ -243,7 +244,7 @@ def _normalize_new(raw: dict) -> dict:
                 entry["extra"] = copy.deepcopy(extra)
         merged["providers"][pid] = entry
 
-    merged["gemma_fallback"] = bool(raw.get("gemma_fallback", True))
+    merged["gemma_fallback"] = bool(raw.get("gemma_fallback", False))
     try:
         merged["max_attempts"] = min(5, max(
             1, int(raw.get("max_attempts", 3))))
@@ -270,14 +271,14 @@ def _migrate_old(raw: dict) -> dict:
     merged = defaults()
 
     def _old_role(value: object) -> dict:
-        role = {"provider": "comfy_gemma", "model": "",
-                "endpoint": "", "gemma_fallback": True}
+        role = {"provider": "", "model": "",
+                "endpoint": "", "gemma_fallback": False}
         if isinstance(value, dict):
             legacy = str(value.get("provider") or PROVIDER_GEMMA)
             role["provider"] = LEGACY_TO_NEW.get(legacy, "comfy_gemma")
             role["model"] = str(value.get("model") or "").strip()
             role["endpoint"] = str(value.get("endpoint") or "").strip()
-            role["gemma_fallback"] = bool(value.get("gemma_fallback", True))
+            role["gemma_fallback"] = bool(value.get("gemma_fallback", False))
         return role
 
     director = _old_role(raw.get("director"))
@@ -310,8 +311,9 @@ def _migrate_old(raw: dict) -> dict:
 
     same_target = (director["provider"] == profile["provider"]
                    and director["model"] == profile["model"])
-    merged["connection"] = {"kind": kind_of(director["provider"]),
-                            "provider": director["provider"]}
+    conn_provider = director["provider"] or profile["provider"] or "lmstudio"
+    merged["connection"] = {"kind": kind_of(conn_provider),
+                            "provider": conn_provider}
     if same_target:
         merged["roles"]["director"] = {"override": False, "provider": "",
                                        "model": ""}
@@ -326,8 +328,8 @@ def _migrate_old(raw: dict) -> dict:
             "model": profile["model"]}
 
     merged["gemma_fallback"] = bool(
-        director.get("gemma_fallback", True)
-        and profile.get("gemma_fallback", True))
+        director.get("gemma_fallback", False)
+        and profile.get("gemma_fallback", False))
     try:
         merged["max_attempts"] = min(5, max(
             1, int(raw.get("max_attempts", 3))))
@@ -379,9 +381,9 @@ def effective_selection(settings: dict, role_name: str) -> dict:
     clean = settings if isinstance(settings, dict) and \
         settings.get("schema") == SCHEMA_VERSION else normalize(settings)
     connection = clean.get("connection") or {}
-    pid = str(connection.get("provider") or "comfy_gemma")
+    pid = str(connection.get("provider") or "lmstudio")
     if pid not in _known_provider_ids():
-        pid = "comfy_gemma"
+        pid = "lmstudio"
     model = str((clean.get("providers") or {}).get(pid, {}).get("model")
                 or "").strip()
     role = (clean.get("roles") or {}).get(role_name) or {}
@@ -478,18 +480,30 @@ def save_to_config_file(config_path: str | Path, settings: dict,
 
 
 def _primary_kind(primary: dict) -> str:
+    """Attempt kind for resolve_chain: "gemma"|"local"|"external"|"go".
+
+    The comfy_gemma provider is ALWAYS "gemma" here, even when the caller
+    pre-set kind="local" (effective_selection()/kind_of() report comfy_gemma
+    as kind "local" - ProviderSpec.kind is only ever "local"|"external",
+    never "gemma" - so a pre-set kind field can never be trusted to already
+    say "gemma" for it). This must run before the kind-field shortcut below,
+    otherwise an explicit "ComfyUI内ローカルGemma" selection would be treated
+    as an unconfigured local provider (empty model -> empty chain) instead
+    of the Gemma-only attempt the user actually chose.
+    """
+    provider = str(primary.get("provider") or "")
+    if provider in (PROVIDER_GEMMA, "comfy_gemma"):
+        return "gemma"
     kind = str(primary.get("kind") or "").strip()
     if kind in ("gemma", "local", "external", "go"):
         return kind
-    # Legacy role dict {provider: gemma|openai_compat|opencode_go}.
-    legacy = str(primary.get("provider") or "")
-    if legacy == PROVIDER_GEMMA or legacy == "comfy_gemma":
-        return "gemma"
-    if legacy == PROVIDER_LOCAL:
+    # Legacy role dict {provider: openai_compat|opencode_go} (gemma/comfy_gemma
+    # already handled above).
+    if provider == PROVIDER_LOCAL:
         return "local"
-    if legacy == PROVIDER_GO:
+    if provider == PROVIDER_GO:
         return "go"
-    if legacy:
+    if provider:
         return "external"
     return "gemma"
 
@@ -537,7 +551,7 @@ def resolve_chain(primary: dict, max_attempts: int = 3,
                     "kind": "go", "provider": PROVIDER_GO, "model": model,
                     "endpoint": str(entry.get("endpoint") or "")})
     if gemma_fallback is None:
-        gemma_fallback = bool(primary.get("gemma_fallback", True))
+        gemma_fallback = bool(primary.get("gemma_fallback", False))
     # Note: legacy "go" is preserved (not normalized to "external") so old
     # op callbacks matching kind == "go" keep working; new callers pass kind
     # "external" explicitly.
@@ -557,9 +571,9 @@ def resolve_chain(primary: dict, max_attempts: int = 3,
         if gemma_fallback:
             chain.append({"kind": "gemma", "provider": "comfy_gemma",
                           "model": ""})
-    else:
-        chain.append({"kind": "gemma", "provider": "comfy_gemma",
-                      "model": ""})
+    # else: no model configured and primary is not "gemma" -> empty chain
+    # (the caller must not silently fall back to another provider; see
+    # run_with_fallback, which raises a DirectorError before calling op).
     # Dedupe, keep order, cap attempts.
     seen: set[str] = set()
     unique: list[dict] = []
@@ -589,7 +603,7 @@ def resolve_role_chain(settings: dict, role_name: str,
         {"kind": selection["kind"], "provider": selection["provider"],
          "model": selection["model"],
          "endpoint": str((selection["extra"] or {}).get("endpoint") or "")},
-        attempts, gemma_fallback=bool(clean.get("gemma_fallback", True)))
+        attempts, gemma_fallback=bool(clean.get("gemma_fallback", False)))
 
 
 def _load_token(loader, provider_id: str) -> str:
@@ -632,7 +646,12 @@ async def run_with_fallback(primary: dict, op, *, max_attempts: int = 3,
     # not pass one explicitly.
     if gemma_fallback is None and isinstance(primary, dict) and \
             "gemma_fallback" in primary:
-        gemma_fallback = bool(primary.get("gemma_fallback", True))
+        gemma_fallback = bool(primary.get("gemma_fallback", False))
+    if not chain:
+        from . import director_provider as provider_mod
+        raise provider_mod.DirectorError(
+            "LLM接続が未設定です。設定 > LLM接続 で接続先とモデルを指定してください。",
+            kind="ai_config")
     last_error: Exception | None = None
     trail: list[dict] = []
     for position, attempt in enumerate(chain):

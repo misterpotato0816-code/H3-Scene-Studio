@@ -412,10 +412,10 @@ class Pipeline:
                 settings, "character_profile")
         except Exception:                                        # noqa: BLE001
             return ""
-        if selection.get("kind") == "gemma":
-            return ""
-        gemma_fallback = bool(settings.get("gemma_fallback", True))
         pid = str(selection.get("provider") or "")
+        if selection.get("kind") == "gemma" or pid == "comfy_gemma":
+            return ""
+        gemma_fallback = bool(settings.get("gemma_fallback", False))
         model = str(selection.get("model") or "").strip()
 
         def _fail(message: str) -> str:
@@ -458,11 +458,80 @@ class Pipeline:
                 system=str(prompts_obj.SYS_CHARACTER_PROFILE),
                 user=str(prompts_obj.USER_CHARACTER_PROFILE), images=urls,
                 max_tokens=1024, temperature=0.35)
-            return str(text or "").strip()
+            text = str(text or "").strip()
+            if not text:
+                # An empty answer is a provider failure, not a hand-off to
+                # the Gemma graph: never send the job elsewhere silently.
+                return _fail("ローカルLLMの回答が空でした。モデルを確認してください。")
+            return text
         except _LLMError as exc:
             return _fail(str(exc))
         except Exception as exc:                                 # noqa: BLE001
             return _fail(f"ローカルLLMでの解析に失敗しました（{exc}）。")
+
+    async def _try_provider_director(self, runner: Runner, *,
+                                      system_prompt: str,
+                                      user_prompt: str) -> str:
+        """AI Director step via the role's effective provider (WP-A).
+
+        Text-only (no images). Returns "" so the caller falls through to the
+        local Gemma graph (standing fallback), UNLESS gemma_fallback is
+        False, in which case this raises PipelineError (kind="ai_config").
+        Never calls another provider from this path (a local failure never
+        reaches external).
+        """
+        try:
+            from . import ai_settings as ai_mod
+            from . import credstore as cred_mod
+            from .llm_providers import LLMError as _LLMError
+            from .llm_providers import build_adapter, key_name
+        except Exception:                                        # noqa: BLE001
+            return ""
+        settings = ai_mod.normalize(self.config.get("ai_settings"))
+        try:
+            selection = ai_mod.effective_selection(settings, "director")
+        except Exception:                                        # noqa: BLE001
+            return ""
+        pid = str(selection.get("provider") or "")
+        if selection.get("kind") == "gemma" or pid == "comfy_gemma":
+            return ""
+        gemma_fallback = bool(settings.get("gemma_fallback", False))
+        model = str(selection.get("model") or "").strip()
+
+        def _fail(message: str) -> str:
+            if gemma_fallback:
+                warn = runner.state.get("warning")
+                runner.state["warning"] = (str(warn) + " / " + message) \
+                    if warn else message
+                return ""
+            raise PipelineError(message, kind="ai_config")
+
+        if not model:
+            return _fail("LLM接続が未設定です。設定 > LLM接続 で接続先とモデルを"
+                        "指定してください。")
+        name = key_name(pid)
+        token = cred_mod.load(name) if name else ""
+        try:
+            adapter = build_adapter(
+                pid, base_url=selection.get("base_url") or "",
+                model=model, token=token, extra=selection.get("extra") or {},
+                vision_models=selection.get("vision_models") or [])
+        except Exception as exc:                                 # noqa: BLE001
+            return _fail(f"LLMでの監督案作成に失敗しました（{exc}）。")
+        try:
+            text, _info = await adapter.chat(
+                system=system_prompt, user=user_prompt, images=None,
+                max_tokens=2048, temperature=0.7)
+            text = str(text or "").strip()
+            if not text:
+                # An empty answer is a provider failure, not a hand-off to
+                # the Gemma graph: never send the job elsewhere silently.
+                return _fail("LLMの回答が空でした。モデルを確認してください。")
+            return text
+        except _LLMError as exc:
+            return _fail(str(exc))
+        except Exception as exc:                                 # noqa: BLE001
+            return _fail(f"LLMでの監督案作成に失敗しました（{exc}）。")
 
     async def _ensure_profile(self, runner: Runner, project: Project) -> str:
         images = project.data["images"]
@@ -553,16 +622,21 @@ class Pipeline:
         if system_prompt is None:
             system_prompt = (P.SYS_DIRECTOR_CONTINUATION if continuation
                              else P.SYS_DIRECTOR_NEW)
-        graph = graphs.build_director_graph(
-            images=project.data["images"], vlm=self.config.vlm,
-            ref_longest=self.config.defaults["ref_longest"],
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            seed=random.randint(1, 2 ** 31 - 1))
-        self._dump(graph, f"{project.id}_director")
-        history = await self._run(runner, graph, lambda n: STAGE_PROMPT,
-                                  profile=self._launch_profile(project))
-        en_prompt = strip_tags(comfy_mod.text_output(history, "preview"))
+        en_prompt = await self._try_provider_director(
+            runner, system_prompt=system_prompt, user_prompt=user_prompt)
+        if not en_prompt:
+            graph = graphs.build_director_graph(
+                images=project.data["images"], vlm=self.config.vlm,
+                ref_longest=self.config.defaults["ref_longest"],
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                seed=random.randint(1, 2 ** 31 - 1))
+            self._dump(graph, f"{project.id}_director")
+            history = await self._run(runner, graph, lambda n: STAGE_PROMPT,
+                                      profile=self._launch_profile(project))
+            en_prompt = strip_tags(comfy_mod.text_output(history, "preview"))
+        else:
+            en_prompt = strip_tags(en_prompt)
         if not en_prompt:
             raise PipelineError("プロンプトを生成できませんでした（出力が空です）。",
                                 stage=STAGES[STAGE_PROMPT])

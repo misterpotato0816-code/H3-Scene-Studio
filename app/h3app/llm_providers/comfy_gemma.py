@@ -14,7 +14,8 @@ from .base import BaseAdapter, LLMError, ProviderSpec
 
 class ComfyGemmaAdapter(BaseAdapter):
     spec = ProviderSpec(
-        id="comfy_gemma", label="ComfyUI内ローカルGemma", kind="local",
+        id="comfy_gemma", label="ComfyUI内ローカルGemma（任意・要 ComfyUI-llama-cpp）",
+        kind="local",
         default_base_url="", url_editable=False, needs_key=False,
         key_name="", supports_model_list=False, supports_unload=False,
         vision_detection="native", fields=[])

@@ -18,7 +18,7 @@
 1. ComfyUI を導入し、下記のカスタムノードとモデルを配置する
 2. このリポジトリを取得し、ComfyUI の Python 環境へ `requirements.txt` を導入する
 3. `app/config.json` と `app/comfy_paths.yaml` を設定例から作る
-4. `RUN_H3.bat` で起動し、設定画面で GPU と LLM 接続先を選ぶ
+4. `RUN_H3.bat` で起動し、設定画面で GPU と LLM 接続先を選ぶ（初回生成の前に必ず設定してください。推奨は LM Studio: `http://127.0.0.1:1234/v1` を起動し、モデルを 1 つロードしてから、設定 > LLM接続 でプロバイダーとモデルを選びます。未設定のまま生成すると、設定 > LLM接続 を案内するメッセージで停止します）
 
 ## モデルと外部依存
 
@@ -29,8 +29,10 @@
 - `loras/minimax_h3_turbo_v4_step600_ema.safetensors`
 - `vae/minimax_h3_video_vae_fp16.safetensors`
 - `vae/minimax_h3_audio_vae_fp32.safetensors`
-- `LLM/gemma-4-E4B-it-ultra-uncensored-heretic-Q8_0.gguf`
-- `LLM/gemma-4-E4B-it-mmproj-BF16.gguf`
+
+> **任意**: 接続先に「ComfyUI内ローカルGemma」プロバイダーを選ぶ場合のみ、次の GGUF も配置します（既定の LLM 接続は LM Studio 等の外部サーバーで、これらは不要です）。
+> - `LLM/gemma-4-E4B-it-ultra-uncensored-heretic-Q8_0.gguf`
+> - `LLM/gemma-4-E4B-it-mmproj-BF16.gguf`
 
 H3 固有の `custom_nodes/H3-Device-Barrier` はリポジトリに含まれます。その他の ComfyUI 本体・カスタムノード・モデルは、それぞれの配布元から導入してください。モデル本体や ComfyUI の複製はこのリポジトリにコミットしません。利用条件は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) を参照してください。
 
@@ -42,7 +44,7 @@ H3 固有の `custom_nodes/H3-Device-Barrier` はリポジトリに含まれま�
 | `qwen3vl_32b_minimax_h3_int8_convrot.safetensors`（約 25.3 GiB） | 同上 | `text_encoders/` |
 | `minimax_h3_video_vae_fp16.safetensors`、`minimax_h3_audio_vae_fp32.safetensors` | 同上 | `vae/` |
 | `minimax_h3_turbo_v4_step600_ema.safetensors` | https://huggingface.co/larryvrh/MiniMax-H3-Turbo-Lora （Apache-2.0） | `loras/` |
-| `gemma-4-E4B-it-*.gguf`（本体 Q8_0 と mmproj） | Gemma 4 E4B の GGUF 配布元（Gemma Terms of Use）。`app/config.json` の `vlm.model` / `vlm.mmproj` にファイル名を書きます | `LLM/` |
+| `gemma-4-E4B-it-*.gguf`（本体 Q8_0 と mmproj、**任意**: 「ComfyUI内ローカルGemma」プロバイダーを選ぶ場合のみ） | Gemma 4 E4B の GGUF 配布元（Gemma Terms of Use）。`app/config.json` の `vlm.model` / `vlm.mmproj` にファイル名を書きます | `LLM/` |
 
 `build/download_models.py <models_dir>` で MiniMax H3 本体と LoRA を Hugging Face から取得し、サイズを照合できます（`huggingface-hub` が必要。GGUF は対象外）。
 
@@ -51,11 +53,18 @@ H3 固有の `custom_nodes/H3-Device-Barrier` はリポジトリに含まれま�
 | ノードパック | 使う理由 | 入手先 |
 |---|---|---|
 | `custom_nodes/H3-Device-Barrier`（このリポジトリ） | GPU 割り当ての検証と text encoder の配置 | `comfy_paths.yaml` の `h3_device_barrier.custom_nodes` で指す |
-| ComfyUI-llama-cpp（`llama_cpp_*`） | ComfyUI 内蔵のローカル LLM（接続先「ComfyUI内ローカルGemma」）。LM Studio 等を接続先にし、設定の「失敗した場合はComfyUI内Gemmaで続行する」を OFF にすれば不要。**配布元にライセンス表記がありません**（[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)） | https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm |
 | ComfyUI_LayerStyle（`LayerUtility: PurgeVRAM V2`、`ImageScaleByAspectRatio V2`） | VRAM 解放と参照画像のリサイズ | https://github.com/chflame163/ComfyUI_LayerStyle |
-| ComfyUI-SeedVR2_VideoUpscaler（任意） | AI 高画質化（SeedVR2） | https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler |
 
 不足しているノードは、生成開始時に「不足ノード」としてパック名付きで表示されます。
+
+### 任意のカスタムノード
+
+既定の設定（LLM 接続 = LM Studio、Gemma フォールバック OFF）ではどちらも使いません。
+
+| ノードパック | 使う理由 | 入手先 |
+|---|---|---|
+| ComfyUI-llama-cpp（`llama_cpp_*`） | ComfyUI 内蔵のローカル LLM（接続先「ComfyUI内ローカルGemma」を選んだ場合、または設定の「失敗した場合はComfyUI内Gemmaで続行する」を自分で ON にした場合のみ）。**配布元にライセンス表記がありません**（[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)） | https://github.com/lihaoyun6/ComfyUI-llama-cpp_vlm |
+| ComfyUI-SeedVR2_VideoUpscaler | AI 高画質化（SeedVR2） | https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler |
 
 ### AI高画質化に使う追加モデル（任意）
 
@@ -95,7 +104,7 @@ Copy-Item .\app\comfy_paths.example.yaml .\app\comfy_paths.yaml
 | `comfy_python` | ComfyUI の Python（空なら `<comfy_dir>\.venv\Scripts\python.exe` を使用） |
 | `media_root` | 生成動画の保存先ルート（`Videos\完成動画` / `Videos\クリップ` が作られます） |
 | `comfy_port` / `app_port` | ComfyUI（既定 8411）と H3 画面（既定 8790）のポート。他のソフトと重なる場合は変更 |
-| `vlm.model` / `vlm.mmproj` | ComfyUI 内蔵 LLM に使う GGUF のファイル名（`LLM/` 配下） |
+| `vlm.model` / `vlm.mmproj`（**任意**） | 接続先「ComfyUI内ローカルGemma」プロバイダーだけが使う GGUF のファイル名（`LLM/` 配下）。既定の LM Studio 接続では使いません |
 
 `app/comfy_paths.yaml` の `<COMFYUI_SHARED_MODELS>`（モデルの置き場）と `<H3_PROJECT_ROOT>`（このリポジトリの絶対パス）を実在するパスへ置き換えます。この YAML は H3 が ComfyUI を起動するときに `--extra-model-paths-config` として渡され、モデルと `custom_nodes/H3-Device-Barrier` の場所を ComfyUI に教えます。
 
@@ -130,7 +139,7 @@ Copy-Item .\backend\h3_v2\paths_rnd.example.yaml .\backend\h3_v2\paths_rnd.yaml
 - **保存先**: 生成動画は `media_root` 配下の `Videos\完成動画`（単発の完成動画・ストーリー結合・高画質化の出力）と `Videos\クリップ`（ストーリーの各クリップ）へ、同名なら `_2`, `_3` を付けて上書きせずに書き出します。右上「生成動画フォルダ」でエクスプローラーが開きます。参照画像は `app/_comfy_input` に取り込み、生成直前に ComfyUI の `/upload/image` で渡します（ComfyUI の `input` へ直接書きません）。
 - **GPU**: `nvidia-smi` で検出した GPU から、自動 / シングル / デュアル（動画生成 GPU と text encoder 用 GPU）を選びます。保存すると ComfyUI の起動引数 `--cuda-device <UUID,...> --reserve-vram <GB>` に反映され、次回 ComfyUI 起動時から有効です。H3 が起動していない ComfyUI は停止せず、割り当てが一致しない場合は生成を拒否します。
 - **LLM接続**: 接続種別（ローカル / 外部API）→ プロバイダー → 使用モデル（一覧取得または手入力）→ 接続情報の順に選びます。
-  - ローカル: ComfyUI 内 Gemma、LM Studio、OpenAI 互換ローカルサーバー、Ollama、llama.cpp server、vLLM、LocalAI（URL 編集可、ループバック / プライベート IP のみ）
+  - ローカル: LM Studio（既定の接続先）、OpenAI 互換ローカルサーバー、Ollama、llama.cpp server、vLLM、LocalAI（URL 編集可、ループバック / プライベート IP のみ）、ComfyUI内ローカルGemma（**任意**: 要 ComfyUI-llama-cpp、ライセンス表記なし）
   - 外部 API: OpenCode Go、OpenAI、Anthropic、Google Gemini、OpenRouter、外部 OpenAI 互換（固定エンドポイントは「接続先（固定）」として表示）
   - API キー / トークンは Windows 資格情報ストアにプロバイダーごとに保存します（設定ファイルへは書きません）。接続テストは**保存済み**のキーを使うので、入力後に「API Keyを保存」を押してからテストしてください。
   - 画像入力に対応していると確認できないモデルには画像を送りません（LM Studio は一覧から判定、他は手動確認チェック）。ローカル接続が失敗しても外部 API へは送信しません。
@@ -214,7 +223,8 @@ VOICEVOXの調整値はH3動画には適用されません。実際の声・口�
 | 生成開始で「不足ノード」「モデルファイルが見つかりません」 | 上記のカスタムノード / モデルが未導入か、`comfy_paths.yaml` の場所が違う。ComfyUI 単体で `custom_nodes` が読み込まれているかも確認 |
 | 「GPU のメモリが不足しました」 | 参照画像の枚数を減らす、参照画像サイズを下げる、設定画面の GPU タブで予約 VRAM を見直す。他のアプリ（LM Studio の常駐モデル等）が VRAM を使っていないか確認。H3 は生成前にローカル LLM のモデル解放を試みます |
 | 「ローカルLLMサーバーに接続できません」 | LM Studio 等のサーバーが起動していない、または URL/ポートが違う。接続テストは**保存済み**のキーと URL を使うので、変更後は保存してからテスト |
-| 監督案の作成が長い / 止まる | ComfyUI 内蔵 LLM の GGUF が大きすぎるか、VRAM 競合。LM Studio 等に切り替えるか、小さい GGUF を使う |
+| 「LLM接続が未設定です。設定 > LLM接続 で接続先とモデルを指定してください。」で生成が止まる | LLM 接続が未設定（初回起動直後など）。設定 > LLM接続 で接続先（LM Studio 推奨）とモデルを選んで保存する |
+| 監督案の作成が長い / 止まる | 「ComfyUI内ローカルGemma」を選んでいる場合、GGUF が大きすぎるか VRAM 競合。LM Studio 等（既定）に切り替えるか、小さい GGUF を使う |
 | ffmpeg / ffprobe が見つからない | PATH に追加する（新しいターミナルで反映）。`ffmpeg -version` で確認 |
 | STOP 後もポートが残る | 表示された PID と実行ファイルを確認して手動で終了。H3 は自分が記録したプロセス以外を終了しません |
 

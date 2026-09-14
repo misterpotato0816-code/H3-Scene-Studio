@@ -752,7 +752,8 @@ if (typeof window !== "undefined") {
           const gemma = aiExtra.gemma || {};
           const avail = gemma.available === true ? "利用可能"
             : gemma.available === false ? "利用不可" : "未確認";
-          gInfo.textContent = `モデル: ${gemma.model || "-"} ／ mmproj: ${gemma.mmproj || "-"} ／ 状態: ${avail}`;
+          gInfo.textContent = `モデル: ${gemma.model || "-"} ／ mmproj: ${gemma.mmproj || "-"} ／ 状態: ${avail}` +
+            " ／ このプロバイダーは任意です（ComfyUI-llama-cpp ノードパック。配布元にライセンス表記なし）";
         }
       }
       // Fixed-endpoint providers (OpenCode Go, OpenAI, ...) show their URL

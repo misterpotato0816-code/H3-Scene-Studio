@@ -156,8 +156,8 @@ _TABLE = {
         "AI設定に問題があるため処理を続けられません",
         False,
         True,
-        "設定 > LLM接続 で、選んだプロバイダーのURL/モデル/画像入力対応を確認するか、"
-        "「失敗時はComfyUI内Gemmaで続行する」を有効にしてください。",
+        "設定 > LLM接続 で、接続先（LM Studio など）とモデルを指定し、"
+        "URL / モデル / 画像入力対応を確認してください。",
     ),
     "input_missing": (
         "参照ファイルが見つかりません",
@@ -190,7 +190,8 @@ _PATTERNS = (
 
 # class_type prefix -> where it comes from. Used to name the missing pack.
 NODE_PACKS = (
-    ("llama_cpp_", "ComfyUI-llama-cpp"),
+    ("llama_cpp_", "ComfyUI-llama-cpp（任意。接続先「ComfyUI内ローカルGemma」を"
+     "選んだ場合のみ必要。配布元にライセンス表記なし）"),
     ("LayerUtility: ", "comfyui_layerstyle"),
     ("H3Cuda", "custom_nodes/H3-Device-Barrier（このリポジトリ内。comfy_paths.yaml の custom_nodes に含める）"),
     ("H3Gated", "custom_nodes/H3-Device-Barrier（このリポジトリ内。comfy_paths.yaml の custom_nodes に含める）"),

@@ -735,8 +735,8 @@
     </div>
 
     <div class="settings-block">
-      <label class="check"><input type="checkbox" id="aiGemmaFallback" checked> 失敗した場合はComfyUI内Gemmaで続行する</label>
-      <p class="hint">ローカル接続の失敗時に外部APIへは送信しません。認証失敗時は切り替えず停止します。試行は最大3回までです。</p>
+      <label class="check"><input type="checkbox" id="aiGemmaFallback"> 失敗した場合はComfyUI内Gemmaで続行する（任意: ComfyUI-llama-cpp ノードが必要）</label>
+      <p class="hint">既定は OFF です。ON にするには ComfyUI-llama-cpp（配布元にライセンス表記なし）と Gemma GGUF の導入が必要です。ローカル接続の失敗時に外部APIへは送信しません。認証失敗時は切り替えず停止します。試行は最大3回までです。</p>
     </div>
 
     <!-- WP-D: startup/shutdown subsection (appended at the end of tabLlm). -->

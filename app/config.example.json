@@ -59,7 +59,7 @@
     "schema": 2,
     "connection": {
       "kind": "local",
-      "provider": "comfy_gemma"
+      "provider": "lmstudio"
     },
     "roles": {
       "director": {
@@ -81,7 +81,7 @@
         "extra": {}
       }
     },
-    "gemma_fallback": true,
+    "gemma_fallback": false,
     "max_attempts": 3,
     "favorites": []
   },

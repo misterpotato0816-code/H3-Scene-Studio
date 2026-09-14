@@ -1647,11 +1647,11 @@ def create_app(cfg: Config) -> web.Application:
                 selection = ai_settings_mod.effective_selection(
                     settings, role_name)
             except Exception:                                    # noqa: BLE001
-                selection = {"kind": "gemma", "provider": "comfy_gemma",
+                selection = {"kind": "local", "provider": "lmstudio",
                              "model": ""}
-            primary = {"kind": selection.get("kind") or "gemma",
+            primary = {"kind": selection.get("kind") or "local",
                        "provider": selection.get("provider")
-                       or "comfy_gemma",
+                       or "lmstudio",
                        "model": str(selection.get("model") or "")}
             extra_endpoint = str(
                 (selection.get("extra") or {}).get("endpoint") or "")
@@ -1714,7 +1714,7 @@ def create_app(cfg: Config) -> web.Application:
         # external, external auth aborts before Gemma.
         answer, used = await ai_settings_mod.run_with_fallback(
             primary, _op, max_attempts=int(settings.get("max_attempts", 3)),
-            gemma_fallback=bool(settings.get("gemma_fallback", True)),
+            gemma_fallback=bool(settings.get("gemma_fallback", False)),
             key_loader=_ai_key_loader)
         used = dict(used or {})
         used["elapsed_ms"] = int((_time.monotonic() - started) * 1000)
@@ -7032,12 +7032,14 @@ def selftest(cfg: Config) -> int:
     from h3app import opencode_go as _go
     from h3app import credstore as _cred
     _sdef = _aim.normalize(None)
-    check("S1: defaults are local Gemma everywhere",
+    check("S1: defaults are LM Studio, no Gemma fallback",
           lambda: _eq((_sdef["connection"]["provider"],
                        _sdef["roles"]["director"]["override"],
                        _sdef["roles"]["character_profile"]["override"],
                        _sdef["max_attempts"]),
-                      ("comfy_gemma", False, False, 3)))
+                      ("lmstudio", False, False, 3)))
+    check("S1: gemma_fallback defaults to False",
+          lambda: _eq(_sdef["gemma_fallback"] is False, True))
     # WP-A: old shape still migrates (gemma/openai_compat/opencode_go).
     _sold = _aim.normalize({
         "director": {"provider": "opencode_go", "model": "m",
@@ -7063,9 +7065,9 @@ def selftest(cfg: Config) -> int:
                        _suser["max_attempts"],
                        _suser["favorites"][0]["model"]), ("m", 5, "m")))
     _schain = _aim.resolve_role_chain(_suser, "director", max_attempts=3)
-    check("S1: chain is [external, gemma]",
+    check("S1: chain is [external] (no gemma_fallback set)",
           lambda: _eq([(a["kind"], a["model"]) for a in _schain],
-                      [("external", "m"), ("gemma", "")]))
+                      [("external", "m")]))
     _szen = _aim.normalize({
         "director": {"provider": "opencode_go", "model": "m",
                      "fallbacks": [{"provider": "zen", "model": "z"},
@@ -7080,7 +7082,7 @@ def selftest(cfg: Config) -> int:
                                 {"provider": "zen", "model": "z"},
                                 {"provider": "opencode_go", "model": "m2",
                                  "endpoint": "messages"}]}, 3)],
-                      [("go", "m"), ("go", "m2"), ("gemma", "")]))
+                      [("go", "m"), ("go", "m2")]))
     try:
         _go._check_url("https://opencode.ai/zen/go/v1/responses")
         _go_ok = True

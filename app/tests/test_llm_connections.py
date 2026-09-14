@@ -558,7 +558,9 @@ class PipelineReleaseLocalLlm(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(called, {"lmstudio", "ollama"})
 
     async def test_gemma_only_builds_no_adapter(self):
-        pipeline = self._pipeline(ai_settings.normalize(None))
+        settings = ai_settings.normalize(None)
+        settings["connection"] = {"kind": "local", "provider": "comfy_gemma"}
+        pipeline = self._pipeline(settings)
         with patch("h3app.llm_providers.build_adapter") as mock_build:
             await pipeline._release_local_llm()
         mock_build.assert_not_called()

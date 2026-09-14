@@ -21,7 +21,8 @@ ComfyUI 本体・カスタムノード・モデルは同梱しません。導入
 - Windows 11、NVIDIA GPU（動作確認は 12 GB 級 GPU 2 枚構成。1 枚構成は「シングル」設定で対応しますが検証は限定的です）
 - ComfyUI 0.34 以降（MiniMax H3 ノードを含む版）と、その Python 環境
 - FFmpeg / ffprobe、`requirements.txt` の Python パッケージ
-- モデル: MiniMax H3 本体・VAE・Turbo LoRA、ローカル LLM 用の GGUF（Gemma 4 系）。任意: RealESRGAN、SeedVR2、LM Studio
+- モデル: MiniMax H3 本体・VAE・Turbo LoRA。任意: RealESRGAN、SeedVR2、ローカル LLM 用の GGUF（Gemma 4 系、ComfyUI内ローカルGemma プロバイダーを使う場合のみ）
+- 標準構成: LLM 接続は LM Studio（または他の OpenAI 互換ローカルサーバー / 外部 API）。Gemma フォールバックは既定で OFF です。
 - 詳細と入手先: [docs/SETUP_JA.md](docs/SETUP_JA.md)、条件: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 ## 既知の制約（正直に）
@@ -31,7 +32,7 @@ ComfyUI 本体・カスタムノード・モデルは同梱しません。導入
 - **高画質化の速度とメモリ**: 方式と環境で大きく異なります。検証機（RTX 4070 Ti 12 GB + RTX 3060 12 GB、576×1024 → 1080×1920、248 フレーム）では Lanczos 約 2 秒、RealESRGAN 約 13 分、SeedVR2 7B fp16 約 53 分（ピーク VRAM 約 5 GB、全ブロック CPU オフロード）でした。他の環境での所要時間・成否は未検証です。
 - **LLM 接続先**: 実接続を確認したのは **OpenCode Go** と **LM Studio** です。OpenAI / Anthropic / Google Gemini / OpenRouter / 外部 OpenAI 互換、Ollama / llama.cpp server / vLLM / LocalAI は**モックテストのみ**（実サーバー・実キーでは未確認）。
 - **環境**: 検証は開発機 1 台（Windows 11、上記 GPU）で行いました。他の GPU 構成・OS では未検証で、動作を保証しません。新規環境での確認は、依存関係の導入・設定読み込み・オフラインの自己診断までです（動画生成は未確認）。
-- **外部ノードのライセンス**: ComfyUI 内蔵 LLM に使う ComfyUI-llama-cpp は配布元にライセンス表記が見当たりません。導入は各自の判断でお願いします。使わない構成（LM Studio 等を接続先にし、Gemma フォールバックを OFF）でも動作します（[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）。
+- **外部ノードのライセンス**: ComfyUI 内蔵 LLM（プロバイダー「ComfyUI内ローカルGemma」）に使う ComfyUI-llama-cpp は配布元にライセンス表記が見当たりません。**既定の設定は ComfyUI-llama-cpp を使いません**（接続先は LM Studio、Gemma フォールバックは既定で OFF）。導入・利用は、ComfyUI内ローカルGemma を選ぶ場合のみ、各自の判断でお願いします（[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）。
 
 ## リポジトリ構成
 
