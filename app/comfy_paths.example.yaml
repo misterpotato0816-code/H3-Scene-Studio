@@ -1,0 +1,20 @@
+# Copy this file to comfy_paths.yaml and replace both placeholders.
+
+comfy.models:
+  base_path: '<COMFYUI_SHARED_MODELS>'
+  is_default: true
+  checkpoints: 'checkpoints/'
+  clip_vision: 'clip_vision/'
+  diffusion_models: 'diffusion_models/'
+  loras: 'loras/'
+  text_encoders: 'text_encoders/'
+  upscale_models: 'upscale_models/'
+  SEEDVR2: 'SEEDVR2/'
+  vae: 'vae/'
+  LLM: 'LLM/'
+
+h3_device_barrier:
+  custom_nodes: '<H3_PROJECT_ROOT>/custom_nodes'
+
+h3v2_pipeline:
+  custom_nodes: '<H3_PROJECT_ROOT>/backend/h3_v2'

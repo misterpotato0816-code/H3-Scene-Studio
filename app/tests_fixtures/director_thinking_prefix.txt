@@ -1,0 +1,66 @@
+<|channel>thought
+Here's a thinking process to ensure all rules are met:
+
+1.  **Analyze the Request & Constraints:**
+    *   **Goal:** Generate a cinematic prompt for a new vertical short-form video (9:16).
+    *   **Model:** MiniMax H3 (Full-Reference Mode, ref2va).
+    *   **Character:** Defined by a detailed profile, referred to as `<Subject 1>`.
+    *   **Scene:** Self-introduction to the camera, smiling, slight bow, natural hand gestures, calm posture, eye contact maintained.
+    *   **Duration:** Approx. 124 frames at 24 fps (approx. 5.16 seconds). *Self-Correction/Check: The speech slot is marked as "roughly 13.2 seconds of speech." This is a critical conflict. I must prioritize fitting the *entire dialogue timeline* inside the duration, but since the requested length is only 5.16s, and the speech is 13.2s, I must assume the visual pacing needs to accommodate the full speech, or perhaps the target frame count is misleading/too short for the specified dialogue length. Given the instruction "Fit the entire dialogue timeline inside this duration," I will aim for a pace that supports the required action (self-introduction) over the given time, even if 5.16s feels too short for 13.2s of speech. I must maintain the pacing required by the action.*
+    *   **Speech Slots:** One slot (`<<LINE_1>>`).
+    *   **Rules Checklist:** Vertical framing (R3), English descriptions (R4), Placeholder tokens only (R1), No BGM unless requested (R2), New clip (Summary must start with [reference generation]).
+
+2.  **Structure the Output (6 Sections):**
+
+    *   **subject_definitions:** Define `<Subject 1>`.
+    *   **summary:** [reference generation] + brief description of the task.
+    *   **retention_analysis:** Check retention for `<Subject 1>`.
+    *   **detailed_description:** The main script/shot breakdown.
+    *   **overall_soundscape:** Ambience/SFX.
+    *   **non_diegetic_music:** N/A (since not requested).
+
+3.  **Drafting Section Content:**
+
+    *   **subject_definitions:**
+        *   `<Subject 1>` (The application fills this in).
+
+    *   **summary:**
+        *   [reference generation] A self-introduction video featuring <Subject 1> speaking directly to the camera, maintaining calm posture and performing natural gestures.
+
+    *   **retention_analysis:**
+        *   `<Subject 1>` (appears in [Shot 1]): fully_preserved - face, hair, outfit, and accessories.
+
+    *   **detailed_description:**
+        *   *Style:* Intimate, high-quality vlog aesthetic with soft, consistent lighting. Vertical framing emphasizes the subject's presence.
+        *   *[Shot 1] (Start):* Start with a medium close-up of <Subject 1> centered in the frame against a softly lit, modern interior background. The camera is static. <Subject 1> looks directly into the lens, maintaining a calm and poised demeanor. She delivers a slight bow and then transitions into a soft smile, beginning her self-introduction while gesturing gently with one hand. She maintains strong eye contact throughout the speech.
+        *   *(Pacing adjustment: Since the speech is long, I will keep the shot static or use very subtle movements to maintain focus on the delivery.)*
+        *   [Shot 1] At 00:00.000, <Subject 1> (S1) smiles and bows slightly, then begins speaking while making natural, calm hand gestures near her chest, <<LINE_1>>
+
+    *   **overall_soundscape:**
+        *   Subtle room ambience, perhaps a gentle hum or soft background noise typical of an indoor setting. No distinct physical actions are required beyond the speech delivery itself.
+
+    *   **non_diegetic_music:**
+        *   N/A (Not requested).
+
+4.  **Final Review against Hard Rules:**
+    *   Six exact headings in order? Yes.
+    *   One placeholder token (`<<LINE_1>>`) exactly once? Yes.
+    *   Placeholder preceded by ID (S1) outside the token? Yes.
+    *   No spoken words/Japanese? Yes.
+    *   `<Subject 1>` line is bare label only? Yes.
+    *   non_diegetic_music is N/A? Yes.
+    *   No markdown fences/preamble? Yes.
+
+5.  **Generate Final Output.** (This matches the desired final structure.)<channel|>subject_definitions
+<Subject 1>
+summary
+[reference generation] A self-introduction video featuring <Subject 1> speaking directly to the camera, maintaining calm posture and performing natural gestures.
+retention_analysis
+<Subject 1> (appears in [Shot 1]): fully_preserved - face, hair, outfit, and accessories.
+detailed_description
+The aesthetic is intimate and modern, utilizing soft, flattering light and a vertical composition that keeps the subject centered and highly engaging.
+[Shot 1] At 00:00.000, The camera holds a static medium close-up shot of <Subject 1> against a softly blurred indoor background. <Subject 1> looks directly into the lens, maintaining a calm and poised posture. She delivers a light, polite bow, transitions into a soft, genuine smile, and then begins speaking while using subtle, natural hand gestures to emphasize her points. She maintains strong, consistent eye contact with the camera throughout the entire monologue, presenting herself in a relaxed yet professional manner, <<LINE_1>>
+overall_soundscape
+Subtle room ambience provides a quiet backdrop for the self-introduction.
+non_diegetic_music
+N/A

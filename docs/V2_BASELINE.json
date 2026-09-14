@@ -1,0 +1,258 @@
+{
+ "audit": "H3_HETERO_V1",
+ "audit_date_utc": "2026-09-06",
+ "comfyui": {
+  "argv": [
+   "ComfyUI\\main.py",
+   "--extra-model-paths-config",
+   "%APPDATA%\\Comfy Desktop\\instance-model-paths\\<instance-id>.yaml"
+  ],
+  "comfyui_version": "0.34.5",
+  "deploy_environment": "local-desktop2-standalone",
+  "frontend": "1.49.6",
+  "note": "Production Desktop on :8188 exposes ONLY cuda:0 (RTX 4070 Ti). v1 hetero routing (SelectCLIPDevice gpu:1) requires the isolated runner launch (ports 8401/8402, both GPUs visible, --default-device 0 WITHOUT --cuda-device).",
+  "python": "3.13.12",
+  "pytorch": "2.10.0+cu130",
+  "system_stats_url": "http://127.0.0.1:8188/system_stats",
+  "templates": "0.55.0",
+  "visible_devices": [
+   ":0 RTX 4070 Ti"
+  ]
+ },
+ "custom_nodes_production": [
+  "ComfyLiterals",
+  "ComfyUI-Conditioning-Rebalance",
+  "comfyui-custom-scripts",
+  "comfyui-easy-use",
+  "ComfyUI-GGUF",
+  "comfyui-kjnodes",
+  "comfyui-krea2-controlnet",
+  "ComfyUI-llama-cpp",
+  "comfyui-videohelpersuite",
+  "ComfyUI-Whisper",
+  "ComfyUI_BiRefNet_ll",
+  "ComfyUI_Comfyroll_CustomNodes",
+  "comfyui_controlnet_aux",
+  "comfyui_custom_nodes_alekpet",
+  "comfyui_layerstyle",
+  "ComfyUI_LayerStyle_Advance",
+  "comfyui_tinyterranodes",
+  "gguf",
+  "kaytool",
+  "purgevram",
+  "rgthree-comfy",
+  "seedvr2_videoupscaler"
+ ],
+ "dependency_graph": {
+  "_hetero_test/final_gpu1_e2e/run_final_gpu1_e2e.py": "reads final_prompt.json (ref_image_size=max fixed graph) -> POST /api/prompt :8401 -> opt_result/final_result.json + mp4",
+  "_hetero_test/opt_ref_match/run_opt_ref_match.py": "reads ../final_gpu1_e2e/final_prompt.json as base, sets ref_image_size=match, verifies file SHA + canonical SHA, POST /api/prompt :8402",
+  "app/h3app/*.py": "pure builders (graphs/compiler/duration/segmenter/transitions/canon) + comfy client + pipeline (3-graph orchestration) + story_runner (upper-level controller, same graphs) + server.py HTTP/SSE",
+  "app/server.py": "HTTP/SSE server, --selftest covers all builders without ComfyUI/GPU",
+  "isolated ComfyUI (:8401/:8402)": "--disable-all-custom-nodes + whitelist(H3-GOLD-Conditioning-Cache, comfyui_layerstyle, comfyui-kjnodes-hetero-test) + hetero_paths.yaml"
+ },
+ "entry_points": {
+  "fallback_308s": "RUN_FINAL_GPU1_E2E.ps1 -> _hetero_test/final_gpu1_e2e (ref_image_size=max)",
+  "formal": "RUN_H3_HETERO_V1.ps1 (thin wrapper, no logic)",
+  "verified_implementation": "RUN_OPT_REF_MATCH.ps1 -> _hetero_test/opt_ref_match/run_opt_ref_match_inner.ps1 (isolated ComfyUI :8402) -> run_opt_ref_match.py"
+ },
+ "gpu_roles": {
+  "GPU0_RT5070Ti_12GB": "H3 DiT sampling + Video VAE + Audio VAE (--default-device 0)",
+  "GPU1_3060_12GB": "H3 text/reference conditioning (SelectCLIPDevice gpu:1 in isolated runner env)"
+ },
+ "hardware": {
+  "cuda": "cu130",
+  "gpus": [
+   "GPU0: NVIDIA RTX 4070 Ti 12GB",
+   "GPU1: NVIDIA RTX 3060 12GB"
+  ],
+  "os": "Windows",
+  "python_comfy": "3.13.12",
+  "ram_gb": 64,
+  "torch": "2.10.0"
+ },
+ "models": {
+  "audio_vae": "minimax_h3_audio_vae_fp32.safetensors (605MB)",
+  "diffusion": [
+   "minimax_h3_ref2va_pruned_int8_convrot.safetensors (20.97GB) [v1]",
+   "minimax_h3_fl2va_pruned_int8_convrot.safetensors (20.97GB) [v2 LONG candidate: first-last-frame]"
+  ],
+  "loras": {
+   "minimax_h3_turbo_4step_ckpt850_pruned_comfyui.safetensors (620MB)": {
+    "adaln_pairs": "removed (51/259)",
+    "binds_partially": true,
+    "note": "same AdaLN-removed warning; 4-step distillation may be degraded",
+    "tensors": 416
+   },
+   "minimax_h3_turbo_v4_step600_ema.safetensors (780MB) [v1 manifest]": {
+    "binds_in_comfyui": false,
+    "evidence": "keys lack 'diffusion_model.' prefix; ComfyUI pruned model expects it. app/h3app/config.py:68-71 + app/README.md:268 confirm 518-key no-op is the measured state.",
+    "tensors": 518
+   }
+  },
+  "note": "ALL Turbo presets for v2 FAST must be verified by generation test, never by filename.",
+  "text_encoders": [
+   "qwen3vl_32b_minimax_h3_int8_convrot.safetensors (27.1GB) [v1]",
+   "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors (15.7GB, spare)"
+  ],
+  "video_vae": "minimax_h3_video_vae_fp16.safetensors (5.2GB)"
+ },
+ "object_info": {
+  "MiniMaxChunkFeedForward": {
+   "inputs": {
+    "chunks": "INT default=2 [1..64]",
+    "seq_threshold": "INT default=4096"
+   },
+   "status": "AVAILABLE"
+  },
+  "MiniMaxH3AddGuide": {
+   "status": "AVAILABLE"
+  },
+  "MiniMaxH3ImageToVideo": {
+   "status": "AVAILABLE"
+  },
+  "MiniMaxH3MemoryEfficientSageAttentionPatch": {
+   "status": "AVAILABLE"
+  },
+  "MiniMaxH3ReferenceToVideo": {
+   "limits": "ref_images<=9, ref_videos<=3, ref_video_audios<=3, ref_audios<=3 (COMFY_AUTOGROW_V3)",
+   "optional": [
+    "ref_images (IMAGE, downscaled to 2048 short edge max, never upscaled)",
+    "ref_videos (IMAGE batch, 24fps, 2-15s)",
+    "ref_video_audios (AUDIO, same-numbered video)",
+    "ref_audios (AUDIO standalone)"
+   ],
+   "outputs": [
+    "CONDITIONING",
+    "LATENT"
+   ],
+   "required": [
+    "clip",
+    "vae",
+    "audio_vae",
+    "prompt",
+    "width",
+    "height",
+    "length",
+    "ref_image_size in {match,max}"
+   ],
+   "status": "AVAILABLE"
+  },
+  "MiniMaxH3SigmaShift": {
+   "defaults": {
+    "shift_audio": 3.0,
+    "shift_video": 12.0
+   },
+   "status": "AVAILABLE"
+  },
+  "MiniMaxLowVRAMAttention": {
+   "inputs": {
+    "head_chunks": "INT default=4 [1..56]"
+   },
+   "status": "AVAILABLE"
+  },
+  "PDD_nodes": {
+   "status": "NOT FOUND (no PDD/H3-distillation node in core or KJNodes)",
+   "v2_flag": "experimental.pdd=false default; disable PDD only, never break stable"
+  },
+  "SelectCLIPDevice": {
+   "note": "v1 graph uses device=gpu:1. Valid ONLY when both GPUs visible (isolated runner). compat layer must read live options and adapt; never hard-fail the app.",
+   "options_on_single_gpu_desktop": [
+    ":8188"
+   ],
+   "status": "AVAILABLE"
+  },
+  "Turbo_loader_nodes": {
+   "status": "NOT FOUND (no H3-specific turbo loader; Turbo = LoraLoaderModelOnly + steps/sampler/shift preset)",
+   "v2_flag": "feature_flags.turbo; TURBO_UNAVAILABLE must be explicit, silent fallback to Base is FORBIDDEN"
+  },
+  "WanFunControlToVideo_WanFunInpaintToVideo": {
+   "note": "Wan-model nodes, NOT H3. No MiniMax/H3 FunControl node exists in this env.",
+   "status": "NOT H3-COMPATIBLE"
+  },
+  "funcontrol_h3": {
+   "status": "NOT FOUND (no H3 FunControl node in core 0.34.5 or KJNodes)",
+   "v2_flag": "feature_flags.funcontrol=false default; CONTROL preset disabled in UI until node appears"
+  },
+  "total_nodes": 2134
+ },
+ "project_structure_note": "No git repo. Root holds v1 launchers + manifest + app/ + _hetero_test/ (v1 impl+evidence) + _archive/ + _backup/ + workflows/ + build/ + custom_nodes/(H3-Device-Barrier). v2 MUST live in new backend/h3_v2/ + workflows/v2/ paths; v1 files are read-only.",
+ "selftest": {
+  "command": "<comfy venv python> app/server.py --selftest",
+  "result": "PASSED (2026-09-06)",
+  "scope": "graph builders, story relay, presets, validation report; no ComfyUI/GPU/network"
+ },
+ "v1_fixed_profile": {
+  "frames": 124,
+  "height": 1024,
+  "lora": "minimax_h3_turbo_v4_step600_ema.safetensors @1.0 (no-op, 518 keys unbound)",
+  "lora_strength": 1.0,
+  "model": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+  "ref_image": "h3test_face_ref.png (longest 1536, lanczos, mult32)",
+  "ref_image_size": "match",
+  "reserve_vram_gib": 1.0,
+  "sampler": "res_multistep",
+  "scheduler": "simple",
+  "seed": 123456789,
+  "steps": 8,
+  "text_encoder": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+  "width": 576
+ },
+ "v1_measurements_seconds": {
+  "fallback_max": 308.36541569999827,
+  "legacy_cpu_approx": 555,
+  "match_saved_vs_max": 90.75318420000258,
+  "match_speedup_percent_vs_max": 29.430402885482554,
+  "v1_match": 217.6122314999957
+ },
+ "v1_sha256": {
+  "RUN_FINAL_GPU1_E2E.ps1": "5E7BE66C4E58E2676DA50239F0ACA0F1EB409E2E174821F6EDD0D57F2CA8D3EF",
+  "RUN_H3_HETERO_V1.ps1": "B5E022CEC37C06045D9A0DC760DA54458DBD8396E1CA4006C22D542888CEF0ED",
+  "RUN_OPT_REF_MATCH.ps1": "311C441964AD447D7C76B27DE0E4D38CF9D8E1DB6D71FCA795622E350436F1D0",
+  "H3_HETERO_V1_MANIFEST.json": "74EC7A77B5240C689EA0005EA66E7C2ADAAFD30BCE1E3D5E19C0F63EFC1A1FC6",
+  "_hetero_test/final_gpu1_e2e/run_final_gpu1_e2e.py": "395825B3039D91B5618FE35401895A4B2ED9B21B5AC5D75EB80411EFC8379828",
+  "_hetero_test/opt_ref_match/run_opt_ref_match.py": "0CB6A5C41CD4AC0B28C6E791A9020EDA0674615B9E28A566F9883D538E823AA4",
+  "app/comfy_paths.yaml": "E9EDC2010DD0A81D30426C47178855B47F30668DDCEA21C5840425BAB2B67AF6",
+  "app/config.json": "B9A97679C63635C591A933F54192C8FD25EC9085FDF3E9C22B85E1EA85196AE5",
+  "app/h3app/canon.py": "CFF2C358D490C2BFD338A227B8BA05D9041E2C7C084F9F675E76C40D8C0158C5",
+  "app/h3app/compiler.py": "5BA0DBBB3320ECFF635D63800E805578FF0E51CD208A4978AF33B3DAA00010A5",
+  "app/h3app/comfy.py": "699D482ECB5DA94F04407F9283F77D9453784F20BC9A3C7F293E61E6216BE383",
+  "app/h3app/config.py": "AD0D14E1327881D076F076F7569580CEA8D8ACF4B62F97FBAD7EF79E4C3BC7CB",
+  "app/h3app/graphs.py": "63B8F41B95A3335084B7CAAC581BCC37080355360DAA84EC8C31BA13A05E02ED",
+  "app/h3app/pipeline.py": "FB51A0D2D2BFBFE2D43EB0E884443546A2370A6E9DCB139A57AF7278DCBD3194",
+  "app/h3app/presets.py": "8AB807FFD01A84E93C2E09FC9F8096A9DEBF517DCF1AA36A6C35DACF9EC80A4F",
+  "app/h3app/story.py": "6B233166E1DC143D56527EAC2BA6B1DF2205B7DD07E2C24FABFF699477F4623F",
+  "app/h3app/story_runner.py": "B41D8D49D3C997A2FB644EB830A968D01ECB58BCBFFB52923047794BBB1546E1",
+  "app/server.py": "D945B516AD09C5FF0F679C3FA0455E9697179C93551D3BB581B8C69E58A65237",
+  "docs/H3_HETERO_V1_FINAL.md": "6BBF5CAB336D725F26D0295C6408C60BE873F389B621DD5C0C08E802BFECC7DD"
+ },
+ "v1_turbo_reverification": {
+  "conclusion": "Turbo is EFFECTIVELY OFF in v1: 217.61s = Base Ref2VA 8-step res_multistep. Any v2 FAST claim must beat this with a LoRA that provably binds (bound-key count logged, TURBO_UNAVAILABLE otherwise).",
+  "pruned_comfyui_variants": "416 tensors WITH diffusion_model. prefix (208/259 pairs); all AdaLN adapters removed per metadata warning -> bind partially but 4-step distillation may be degraded. Generation test required.",
+  "raw_v4_step600_ema": "518 tensors WITHOUT diffusion_model. prefix -> 0 keys bind on ComfyUI pruned model (matches app config comment + README). v1 manifest strength 1.0 is a no-op."
+ },
+ "v2_amendments": {
+  "authorized_by": "H3-V2 FINALIZATION DIRECTIVE",
+  "files": {
+   "app/server.py": {
+    "sha256": "24E3145DFF0AA031888B15F108E84049303DDC4A21042AB5379C48EE1DF82D93",
+    "why": "modes/compat/clip-lock/regenerate endpoints + modes selftest (finalization 1,5,6,7)"
+   },
+   "app/h3app/config.py": {
+    "sha256": "C6BB671487E617761361076C14B9C545E41D7D4608365CF54BA54F2840FD496B",
+    "why": "story seconds_per_segment 5->10 (30s=10x3 decision)"
+   },
+   "app/h3app/pipeline.py": {
+    "sha256": "8AD2BCE4224660756BA0A0E30F9ACAE4AFE2286DCB9BFEEE6BC8D4A25A810876",
+    "why": "mode resolve/validate + base LoRA drop + clip meta (mode/gen_seconds/paths)"
+   },
+   "app/h3app/story_runner.py": {
+    "sha256": "6ED5BC0C3D51BFEF275253662988A9D59679F6202D81373910FA65E1DC73BFDA",
+    "why": "locked-skip note + prev-clip fix (clip_for) + v2cache record + ORIGINAL RE-ANCHOR"
+   },
+   "app/h3app/graphs.py": {
+    "sha256": "715C6B1392496036EFA1574B3FA96C953BA597CD718DA46D77B2E10C483B3AAF",
+    "why": "V3 LONG_FAST: additive continuation keys (tail 0f/last_frame_image/voice_master + VOICE_MASTER_CONFLICT GraphError); fresh-clip and tail>0 paths byte-identical"
+   }
+  }
+ }
+}

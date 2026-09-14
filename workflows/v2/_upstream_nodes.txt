@@ -1,0 +1,29 @@
+MarkdownNote x3
+LoadImage x3
+VAELoader x2
+VAEDecodeAudio x1
+VAEDecode x1
+SamplerCustomAdvanced x1
+BasicGuider x1
+CLIPLoader x1
+CreateVideo x1
+ComfyMathExpression x1
+MiniMaxH3ReferenceToVideo x1
+RandomNoise x1
+KSamplerSelect x1
+PrimitiveStringMultiline x1
+UNETLoader x1
+PrimitiveFloat x1
+ResolutionSelector x1
+MiniMaxH3SigmaShift x1
+BasicScheduler x1
+LoraLoaderModelOnly x1
+SaveVideo x1
+---widgets---
+SamplerCustomAdvanced :: []
+MiniMaxH3ReferenceToVideo :: ["", 1344, 768, 124, "match"]
+KSamplerSelect :: ["euler"]
+UNETLoader :: ["minimax_h3_ref2va_bf16.safetensors", "default"]
+MiniMaxH3SigmaShift :: [12, 3]
+BasicScheduler :: ["simple", 4, 1]
+LoraLoaderModelOnly :: ["minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors", 1]

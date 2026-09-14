@@ -1,0 +1,73 @@
+{
+  "version": "H3_HETERO_V1",
+  "status": "final",
+  "adopted_profile": "ref_image_size=match",
+  "formal_entry": "RUN_H3_HETERO_V1.ps1",
+  "verified_implementation_entry": "RUN_OPT_REF_MATCH.ps1",
+  "fallback_entry": "RUN_FINAL_GPU1_E2E.ps1",
+  "gpu_roles": {
+    "gpu1": "RTX 3060 - H3 text/reference conditioning",
+    "gpu0": "RTX 4070 Ti - H3 DiT sampling and video/audio VAE"
+  },
+  "fixed_generation_settings": {
+    "model": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+    "text_encoder": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+    "turbo_lora": "minimax_h3_turbo_v4_step600_ema.safetensors",
+    "width": 576,
+    "height": 1024,
+    "frames": 124,
+    "steps": 8,
+    "seed": 123456789,
+    "sampler": "res_multistep",
+    "scheduler": "simple",
+    "ref_image_size": "match",
+    "reserve_vram_gib": 1.0
+  },
+  "measurements_seconds": {
+    "v1_match": 217.6122314999957,
+    "fallback_max": 308.36541569999827,
+    "legacy_cpu_approx": 555,
+    "match_saved_vs_max": 90.75318420000258,
+    "match_speedup_percent_vs_max": 29.430402885482554
+  },
+  "frozen_local_artifacts": [
+    {
+      "path": "_hetero_test/opt_ref_match/candidate_prompt.json",
+      "sha256": "75E8D6BD344855A4A8D090AA04F73E72B7EA35F0E4DCF1B7E724F59CD2F32B81"
+    },
+    {
+      "path": "_hetero_test/opt_ref_match/opt_result.json",
+      "sha256": "2CFAF0FA3504080F3CEAF93EA63253714599474BE41A636AEAFA90D6DE7D8ADB"
+    },
+    {
+      "path": "_hetero_test/final_gpu1_e2e/final_prompt.json",
+      "sha256": "8E126ECBA480FA6F9DD6470B51BDAB9C28FC7F9BE29DBA1508FDB925012F70E1"
+    },
+    {
+      "path": "_hetero_test/final_gpu1_e2e/final_result.json",
+      "sha256": "C8BD471F2F0EC2017B4D1AF37FFACCAFD5C5DC2FA05450B0F609FF3C77038753"
+    },
+    {
+      "path": "_hetero_test/gold/cache/a9c9cb503121aabc3dfbf94472feb32808a3f63984f69581f676148744c6850e.manifest.json",
+      "sha256": "A34B9524C2C6F6F9813F207B0A5766127A4111E4108FD91FA9FE073FA4289160"
+    },
+    {
+      "path": "_hetero_test/gold/cache/a9c9cb503121aabc3dfbf94472feb32808a3f63984f69581f676148744c6850e.safetensors",
+      "sha256": "A459CD6200B1150BD983D28E4509DD2808FB1FB404BE7F4B4A207D0842010225"
+    },
+    {
+      "path": "_hetero_test/gold/gpu1_te_capture/cache/8cda29c1a5f1cfc1642075303f45b9c171871879d95dab3c08fcba1428264ed6.manifest.json",
+      "sha256": "186E68182B51F1247DF3E7AAA8379F2AE781435ACAD6A74F66DE9AFF8A5F1C73"
+    },
+    {
+      "path": "_hetero_test/gold/gpu1_te_capture/cache/8cda29c1a5f1cfc1642075303f45b9c171871879d95dab3c08fcba1428264ed6.safetensors",
+      "sha256": "35BCF55F3B8F3AB6E5DAB50842CB1A6CFDA3B391A8661550D011C2AA6CD7D1F1"
+    }
+  ],
+  "policy": {
+    "audio_noise": "known separate issue; no audio processing change in v1 finalization",
+    "heavy_generation_rerun_during_finalization": false,
+    "cpu_gold_regenerated": false
+  }
+}
+

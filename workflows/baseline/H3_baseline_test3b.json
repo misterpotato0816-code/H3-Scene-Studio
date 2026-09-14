@@ -1,0 +1,5185 @@
+{
+  "id": "51bda59a-089c-4cb9-8945-d3a09fbb7615",
+  "revision": 0,
+  "last_node_id": 97,
+  "last_link_id": 105,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -700,
+        0
+      ],
+      "size": [
+        560,
+        760
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# H3 Phase 1 CORE\n\nMiniMax H3 専用。**人物保持 / 続き生成 / 日本語→英語自動化** の3つが中核です。\n\n## 手順\n\n1. **10 Character Master**\n   `①顔寄り` にキャラクター画像を読み込みます。\n   ②③④ は任意。使うならノードを選んで **Ctrl+B** でバイパスを解除。\n   高解像度の参照ほど同一性が上がります（その分遅くなります）。\n\n2. **20 Character Profile**\n   実行すると VLM が参照画像から顔立ち・髪・肌・体格・衣装・素材感を抽出します。\n   結果は黄色の ShowText に出ます。**その場で編集できます**。\n   気に入ったらコピーして保存しておくと、以降のクリップで使い回せます。\n\n3. **30 日本語入力**\n   ①シーン指示と②セリフを日本語で書きます。\n   **②に書いた行は一字一句そのまま** `<d>[Japanese] ...</d>` に入ります。\n   ②を空にすれば AI がセリフを創作します。\n\n4. **40 H3 Director Prompt**\n   VLM が H3 公式の6セクション英語プロンプトを生成します。\n   結果は黄色の ShowText で直接編集できます。\n   完成したプロンプトを使い回したいときは\n   「プロンプト手動入力」を Ctrl+B で有効化すると VLM を飛ばせます。\n\n5. **60** で実行。**80 Output** に mp4 が保存されます。\n\n## 続きを作るとき\n\n**45 Tail Relay** グループのノードを全部選択して Ctrl+B（バイパス解除）。\n同じく **SYS-B: 続き生成** と **③前クリップ情報** も有効化します。\n詳しくは 45 グループのノートを見てください。\n\n## ※ モデルが未導入だと 50 のローダーが赤くなります\n20〜40（VLM部分）は現状のモデルだけで動きます。\n"
+      ],
+      "title": "00 ここから読む / START HERE",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        320,
+        320
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "title": "① 顔寄り / FACE",
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 3,
+      "type": "LayerUtility: ImageScaleByAspectRatio V2",
+      "pos": [
+        0,
+        360
+      ],
+      "size": [
+        320,
+        220
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            5,
+            81
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_size",
+          "type": "BOX",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayerUtility: ImageScaleByAspectRatio V2"
+      },
+      "widgets_values": [
+        "original",
+        1,
+        1,
+        "crop",
+        "lanczos",
+        "32",
+        "longest",
+        1536,
+        "#000000"
+      ],
+      "title": "resize (longest 1536 px)"
+    },
+    {
+      "id": 4,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        620
+      ],
+      "size": [
+        320,
+        320
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "title": "② 上半身 / BUST",
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 5,
+      "type": "LayerUtility: ImageScaleByAspectRatio V2",
+      "pos": [
+        0,
+        980
+      ],
+      "size": [
+        320,
+        220
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            6,
+            82
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_size",
+          "type": "BOX",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayerUtility: ImageScaleByAspectRatio V2"
+      },
+      "widgets_values": [
+        "original",
+        1,
+        1,
+        "crop",
+        "lanczos",
+        "32",
+        "longest",
+        1152,
+        "#000000"
+      ],
+      "title": "resize (longest 1152 px)"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1240
+      ],
+      "size": [
+        320,
+        320
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "title": "③ 全身 / FULL BODY",
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 7,
+      "type": "LayerUtility: ImageScaleByAspectRatio V2",
+      "pos": [
+        0,
+        1600
+      ],
+      "size": [
+        320,
+        220
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            7,
+            83
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_size",
+          "type": "BOX",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayerUtility: ImageScaleByAspectRatio V2"
+      },
+      "widgets_values": [
+        "original",
+        1,
+        1,
+        "crop",
+        "lanczos",
+        "32",
+        "longest",
+        1152,
+        "#000000"
+      ],
+      "title": "resize (longest 1152 px)"
+    },
+    {
+      "id": 8,
+      "type": "LoadImage",
+      "pos": [
+        0,
+        1860
+      ],
+      "size": [
+        320,
+        320
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ],
+      "title": "④ 衣装・小物 / OUTFIT",
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 9,
+      "type": "LayerUtility: ImageScaleByAspectRatio V2",
+      "pos": [
+        0,
+        2220
+      ],
+      "size": [
+        320,
+        220
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            8,
+            84
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "original_size",
+          "type": "BOX",
+          "links": []
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayerUtility: ImageScaleByAspectRatio V2"
+      },
+      "widgets_values": [
+        "original",
+        1,
+        1,
+        "crop",
+        "lanczos",
+        "32",
+        "longest",
+        896,
+        "#000000"
+      ],
+      "title": "resize (longest 896 px)"
+    },
+    {
+      "id": 10,
+      "type": "BatchImagesNode",
+      "pos": [
+        500,
+        0
+      ],
+      "size": [
+        300,
+        160
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "image0",
+          "name": "images.image0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "label": "image1",
+          "name": "images.image1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "label": "image2",
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "label": "image3",
+          "name": "images.image3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchImagesNode"
+      },
+      "widgets_values": [],
+      "title": "参照をバッチ化"
+    },
+    {
+      "id": 11,
+      "type": "CR Image Grid Panel",
+      "pos": [
+        500,
+        200
+      ],
+      "size": [
+        300,
+        220
+      ],
+      "flags": {},
+      "order": 59,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            10,
+            13,
+            52
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Image Grid Panel"
+      },
+      "widgets_values": [
+        4,
+        "custom",
+        0,
+        "white",
+        2,
+        "#000000"
+      ],
+      "title": "VLMに見せるキャラシート"
+    },
+    {
+      "id": 12,
+      "type": "PreviewImage",
+      "pos": [
+        500,
+        460
+      ],
+      "size": [
+        300,
+        300
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "title": "シート確認"
+    },
+    {
+      "id": 13,
+      "type": "llama_cpp_model_loader",
+      "pos": [
+        900,
+        0
+      ],
+      "size": [
+        400,
+        210
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "llama_model",
+          "type": "LLAMACPPMODEL",
+          "links": [
+            11,
+            50
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_model_loader"
+      },
+      "widgets_values": [
+        "gemma-4-E4B-it-ultra-uncensored-heretic-Q8_0.gguf",
+        "gemma-4-E4B-it-mmproj-BF16.gguf",
+        "Gemma4",
+        16384,
+        -1,
+        0,
+        1568
+      ],
+      "title": "VLM (Gemma-4)",
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 14,
+      "type": "llama_cpp_parameters",
+      "pos": [
+        900,
+        250
+      ],
+      "size": [
+        400,
+        360
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "parameters",
+          "type": "LLAMACPPARAMS",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_parameters"
+      },
+      "widgets_values": [
+        1024,
+        30,
+        0.9,
+        0.05,
+        1.0,
+        0.35,
+        1.05,
+        0.0,
+        0.0,
+        0,
+        0.1,
+        5.0,
+        -1
+      ],
+      "title": "params: profile (low temp)"
+    },
+    {
+      "id": 15,
+      "type": "ttN text",
+      "pos": [
+        900,
+        650
+      ],
+      "size": [
+        400,
+        320
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "You are a character continuity supervisor for a film production.\nYou will be shown a reference sheet containing one or more views of the SAME character\n(and possibly an outfit / prop reference).\n\nYour job is to write a CHARACTER PROFILE that will be pasted into every future shot\ndescription so the character stays identical across many separately generated clips.\n\nOUTPUT RULES\n- Output ONLY the profile block below. No preamble, no explanation, no markdown fences,\n  no <think> tags, no bullet characters other than the ones shown.\n- Write in English.\n- Describe ONLY what is visible. Never invent a name, age, personality, or backstory.\n- Be concrete and physical. \"pretty girl\" is useless; \"short black bob cut with blunt\n  fringe ending just above the eyebrows\" is useful.\n- If a detail is not visible in the reference, omit that line rather than guessing.\n- Keep the whole block under 220 words.\n\nOUTPUT FORMAT (copy these exact headings)\n\nFACE: <face shape, eye shape and colour, eyebrow shape, nose, mouth, skin tone,\n       distinguishing marks such as moles, freckles, scars>\nHAIR: <colour including highlights, length, cut, parting, fringe, texture, how it falls>\nBUILD: <apparent height impression, body proportions, shoulder width, posture>\nSKIN: <tone, finish (matte/dewy), any visible texture>\nOUTFIT: <every garment top to bottom with colour, material, cut, closure, and how it sits>\nACCESSORIES: <glasses, jewellery, headphones, bag, hair clips, watch - with colour and placement>\nMATERIALS: <fabric weave, sheen, transparency, wear and wrinkles, metal finish>\nCOLOR_KEYS: <4-6 dominant colours as plain words, e.g. \"light blue, navy, white, black\">\n"
+      ],
+      "title": "SYS: Character Profile 抽出"
+    },
+    {
+      "id": 16,
+      "type": "llama_cpp_instruct_adv",
+      "pos": [
+        900,
+        1010
+      ],
+      "size": [
+        400,
+        400
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "llama_model",
+          "type": "LLAMACPPMODEL",
+          "link": 11
+        },
+        {
+          "name": "parameters",
+          "type": "LLAMACPPARAMS",
+          "link": 12
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "name": "queue_handler",
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "system_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "system_prompt"
+          },
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            15
+          ]
+        },
+        {
+          "name": "output_list",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "state_uid",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_instruct_adv"
+      },
+      "widgets_values": [
+        "Empty - Nothing",
+        "Analyse the attached character reference sheet and produce the CHARACTER PROFILE block.\nAll views belong to the same character unless the sheet obviously contains a separate\noutfit-only or prop-only panel; in that case fold those details into OUTFIT / ACCESSORIES.\n",
+        "",
+        "images",
+        8,
+        1024,
+        1,
+        "fixed",
+        true,
+        false
+      ],
+      "title": "① Character Profile を抽出",
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 17,
+      "type": "ShowText|pysssss",
+      "pos": [
+        900,
+        1450
+      ],
+      "size": [
+        400,
+        320
+      ],
+      "flags": {},
+      "order": 66,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [],
+      "title": "Character Profile (ここで直接編集可)",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 18,
+      "type": "ttN text",
+      "pos": [
+        900,
+        1810
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "Profile 手動上書き (使うなら Ctrl+B で有効化)"
+    },
+    {
+      "id": 19,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        900,
+        2090
+      ],
+      "size": [
+        400,
+        80
+      ],
+      "flags": {},
+      "order": 68,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any_01",
+          "type": "*",
+          "link": 16
+        },
+        {
+          "name": "any_02",
+          "type": "*",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "*",
+          "type": "*",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Any Switch (rgthree)"
+      },
+      "widgets_values": [],
+      "title": "Profile: 手動 > 自動"
+    },
+    {
+      "id": 20,
+      "type": "ttN text",
+      "pos": [
+        1400,
+        0
+      ],
+      "size": [
+        430,
+        300
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "# シーン指示（日本語で自由に書いてください）\n明るいカフェの窓辺。主役の女の子がスマホで自撮りをしながら、\nカメラに向かって話しかけている縦型のVlog。アップのカットを多めに。\n"
+      ],
+      "title": "① シーン指示（日本語）",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 21,
+      "type": "ttN text",
+      "pos": [
+        1400,
+        340
+      ],
+      "size": [
+        430,
+        280
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "はい、ということでこんにちは！\n今日はこのカフェの限定スイーツを食べに来ました。\nえ、待って？これめちゃくちゃ美味しそうじゃない？\n"
+      ],
+      "title": "② セリフ確定（1行1発話 / 空ならAIが創作）",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 22,
+      "type": "ttN text",
+      "pos": [
+        1400,
+        660
+      ],
+      "size": [
+        430,
+        220
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "NONE - this is a new clip, ignore this section.\n\n（続き生成のときは、この行を消して前クリップの内容を日本語で書いてください。\n　例: 前クリップ：カフェの外観の前で挨拶をして、ドアに手をかけたところで終わった。）\n"
+      ],
+      "title": "③ 前クリップ情報（続き生成時のみ書き換え）"
+    },
+    {
+      "id": 23,
+      "type": "ttN text",
+      "pos": [
+        1400,
+        920
+      ],
+      "size": [
+        430,
+        260
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "mismatched lip sync, off-sync audio, incorrect dialogue timing, awkward pauses,\nfrozen mouth, silent speech, delayed mouth movement, exaggerated mouth movement,\nfacial distortion, identity drift, changing hairstyle, changing outfit, anatomy errors,\nbroken hands, extra fingers, awkward gesture motion, stiff body motion, camera shake,\nsudden zoom, unstable framing, unwanted cuts, perspective distortion, background warping,\ncomposition drift, inconsistent lighting, flickering light, oversaturation, blur,\nlow detail, text, logo, watermark"
+      ],
+      "title": "④ 避けたい要素"
+    },
+    {
+      "id": 24,
+      "type": "PrimitiveFloat",
+      "pos": [
+        1400,
+        1220
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        8.0
+      ],
+      "title": "尺（秒） 5.2 ～ 15.0 推奨",
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 25,
+      "type": "PrimitiveInt",
+      "pos": [
+        1400,
+        1340
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        24
+      ],
+      "title": "fps (H3 は 24 固定)"
+    },
+    {
+      "id": 26,
+      "type": "MathExpression|pysssss",
+      "pos": [
+        1400,
+        1460
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "a",
+          "type": "*",
+          "link": 18
+        },
+        {
+          "name": "b",
+          "type": "*",
+          "link": 19
+        },
+        {
+          "name": "c",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            20,
+            21,
+            89
+          ]
+        },
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MathExpression|pysssss"
+      },
+      "widgets_values": [
+        "min(362, max(124, round(a*b) + (5 - round(a*b) % 17) % 17))"
+      ],
+      "title": "フレーム数 (n %% 17 == 5 に揃える)",
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 27,
+      "type": "Display Any (rgthree)",
+      "pos": [
+        1400,
+        1640
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 20
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "Display Any (rgthree)"
+      },
+      "widgets_values": [],
+      "title": "→ 実際のフレーム数"
+    },
+    {
+      "id": 28,
+      "type": "CR Integer To String",
+      "pos": [
+        1950,
+        0
+      ],
+      "size": [
+        380,
+        80
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "int_",
+          "type": "INT",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            39
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Integer To String"
+      },
+      "widgets_values": [],
+      "title": "frames → string"
+    },
+    {
+      "id": 29,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        120
+      ],
+      "size": [
+        380,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "# CHARACTER PROFILE (paste physical detail from here into <Subject 1>)"
+      ],
+      "title": "hdr:prof"
+    },
+    {
+      "id": 30,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        240
+      ],
+      "size": [
+        380,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "\n\n# SCENE REQUEST (Japanese, from the user)"
+      ],
+      "title": "hdr:scene"
+    },
+    {
+      "id": 31,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        360
+      ],
+      "size": [
+        380,
+        130
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "\n\n# DIALOGUE - VERBATIM, MANDATORY\nEach line below is a separate utterance, in order.\nYou MUST reproduce every one of them inside detailed_description as:\n    <Subject 1> (S1) <action/delivery>, <d>[Japanese] THE LINE EXACTLY AS WRITTEN</d>\nDo not paraphrase. Do not write 'delivers her line'. Copy the characters.\nIf this block is empty, you may invent the dialogue yourself.\n--- LINES START ---"
+      ],
+      "title": "hdr:dlg"
+    },
+    {
+      "id": 32,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        530
+      ],
+      "size": [
+        380,
+        90
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "--- LINES END ---\nReminder: the number of <d> tags in your output must equal the number of lines between LINES START and LINES END."
+      ],
+      "title": "hdr:dlgEnd"
+    },
+    {
+      "id": 33,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        660
+      ],
+      "size": [
+        380,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "\n\n# PREVIOUS CLIP (continuation mode only)"
+      ],
+      "title": "hdr:prev"
+    },
+    {
+      "id": 34,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        780
+      ],
+      "size": [
+        380,
+        80
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "\n\n# AVOID (do not depict any of the following)"
+      ],
+      "title": "hdr:neg"
+    },
+    {
+      "id": 35,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        900
+      ],
+      "size": [
+        380,
+        90
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "\n\n# TARGET LENGTH\nGenerate approximately"
+      ],
+      "title": "hdr:lenA"
+    },
+    {
+      "id": 36,
+      "type": "ttN text",
+      "pos": [
+        1950,
+        1030
+      ],
+      "size": [
+        380,
+        110
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "frames at 24 fps. Fit the entire dialogue timeline inside this duration.\n# CANVAS\nVertical 9:16 short-form video."
+      ],
+      "title": "hdr:lenB"
+    },
+    {
+      "id": 37,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1180
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 70,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 22
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 01"
+    },
+    {
+      "id": 38,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1280
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 71,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 24
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 02"
+    },
+    {
+      "id": 39,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1380
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 72,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 26
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 03"
+    },
+    {
+      "id": 40,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1480
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 73,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 28
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 04"
+    },
+    {
+      "id": 41,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1580
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 74,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 30
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 05"
+    },
+    {
+      "id": 42,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1680
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 75,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 32
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 06"
+    },
+    {
+      "id": 43,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1780
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 76,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 34
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 07"
+    },
+    {
+      "id": 44,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1880
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 77,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 36
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 08"
+    },
+    {
+      "id": 45,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        1980
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 78,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 38
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 09"
+    },
+    {
+      "id": 46,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        2080
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 79,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 40
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 10"
+    },
+    {
+      "id": 47,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        2180
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 80,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 42
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 11"
+    },
+    {
+      "id": 48,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        2280
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 81,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 44
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 12"
+    },
+    {
+      "id": 49,
+      "type": "JoinStringMulti",
+      "pos": [
+        1950,
+        2380
+      ],
+      "size": [
+        380,
+        60
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 82,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_1",
+          "type": "STRING",
+          "link": 46
+        },
+        {
+          "name": "string_2",
+          "type": "STRING",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "links": [
+            54
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinStringMulti"
+      },
+      "widgets_values": [
+        2,
+        "\n",
+        false,
+        null
+      ],
+      "title": "join 13"
+    },
+    {
+      "id": 50,
+      "type": "ttN text",
+      "pos": [
+        2450,
+        0
+      ],
+      "size": [
+        430,
+        360
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            49
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "You are a Cinematic Director and Master Prompt Engineer for the MiniMax H3\nmultimodal video+audio generation model, operating in Full-Reference Mode (ref2va).\n\nOutput ONLY the six sections below, in this exact order, each heading on its own line.\nNo preamble, no commentary, no markdown code fences, no backticks, no <think> tags.\n\nsubject_definitions\nsummary\nretention_analysis\ndetailed_description\noverall_soundscape\nnon_diegetic_music\n\n=====================  SECTION RULES  =====================\n\n1. subject_definitions\n   One line per referenced item. Labels:\n     <Subject N>  reusable visible content (person, animal, outfit, prop, environment, style)\n     <Picture N>  a reference image used as a concrete frame or composition anchor\n     <Video N>    a reference video providing an editing source / continuation start / timing\n     <Audio N>    an audio signal that is copied or referenced\n   Reference numbering follows the order the assets are presented to the model:\n   images first, then videos, then standalone audio; 1-based within each type.\n   For the main character, paste the physical detail from the CHARACTER PROFILE supplied\n   by the user into the <Subject 1> line. Do not summarise it away.\n\n2. summary\n   One short English paragraph starting with a bracketed task type, e.g.\n     [reference generation]\n     [video continuation + reference generation + audio reference]\n   Use only the previously defined labels. Introduce no new labels here.\n\n3. retention_analysis\n   One line per label, using these exact markers.\n     visual: fully_preserved | partially_preserved | attribute_transfer | weak_reference\n     audio:  fully_copy | partially_copy | reference | weak_reference\n   Format:\n     <Subject 1> (appears in [Shot 1], [Shot 2]): fully_preserved - <what is retained>\n   Every <Subject N> defined in section 1 MUST appear here.\n   Unless the user explicitly asks for a change, people are fully_preserved for\n   face, hair and outfit.\n\n4. detailed_description\n   The main body, in target-video playback order.\n   - Open with one or two English sentences establishing the overall visual style,\n     BEFORE [Shot 1].\n   - [Shot 1] has no timestamp. Later shots start with \"[Shot N] At MM:SS.mmm, \".\n     Cut times must strictly increase and stay inside the video duration.\n   - Camera motion is written as natural English inside the shot. Vocabulary:\n     Zoom In/Out, Push In, Pull Out, Pan Left/Right, Truck Left/Right, Tilt Up/Down,\n     Pedestal Up/Down, Arc Shot, Tracking Shot, Static Shot, Shake Slightly/Strongly,\n     POV, Roll Clockwise/Counterclockwise; optionally \"with small/large amplitude\"\n     and \"at slow/fast speed\".\n   - Speakers get stable IDs (S1), (S2)... assigned in order of first vocal event and\n     reused in every later shot. Two people speaking together is (S1,S2).\n   - Dialogue is written as:  <d>[Japanese] ...</d>\n     The speaker ID, action and delivery go OUTSIDE the <d> tags.\n   - Describe the character using the <Subject N> label plus the physical detail on\n     first appearance; afterwards reuse the label without redefining it.\n   - Target 350-500 English words for generation tasks.\n\n5. overall_soundscape\n   1-4 English sentences: ambience, physical action sounds, non-verbal human sounds.\n   Do NOT repeat dialogue here. Use N/A only if the user asked for total silence.\n\n6. non_diegetic_music\n   Background score that only the audience hears.\n\n=====================  HARD RULES  =====================\n\nR1. DIALOGUE IS SACRED - THIS IS THE MOST IMPORTANT RULE.\n    The user's input ends with a \"DIALOGUE (verbatim)\" block.\n    Every line in that block MUST appear inside detailed_description, wrapped in\n    <d>[Japanese] ...</d>, in the given order, copied character-for-character.\n    No rewording. No summarising. No translation. No politeness-level change.\n    No added or removed punctuation.\n\n    It is NOT acceptable to write \"she delivers the first line\" or \"she greets the\n    camera\". The literal Japanese text MUST be present inside the <d> tags.\n\n    WRONG:\n      <Subject 1> (S1) smiles and delivers her opening greeting to the camera.\n    RIGHT:\n      <Subject 1> (S1) smiles at the camera and says,\n      <d>[Japanese] みんな、来てくれてありがとう！</d>\n\n    Only if that block is empty or says NONE may you invent dialogue yourself.\n\nR2. NO SCORE UNLESS ASKED.\n    Write exactly \"N/A\" under non_diegetic_music unless the user explicitly requested\n    background music. Do not describe score-like music anywhere else either. The BGM is\n    added later as a separate audio track.\n\nR3. VERTICAL FRAMING.\n    The output is a vertical 9:16 short-form video watched on a phone. Favour close-ups\n    and medium close-ups. Keep the subject centred and in the upper half. Avoid wide\n    panoramas and horizontally spread group compositions.\n\nR4. LANGUAGE SPLIT.\n    All description, analysis and camera direction in English. Dialogue, lyrics and any\n    text visibly written in the scene keep their original language.\n\nR5. Respect the requested duration. Fit the whole dialogue timeline inside it rather\n    than padding to a word count.\n\n=====================  FINAL CHECK BEFORE YOU ANSWER  =====================\n\nVerify all of the following. If any fails, fix it before emitting your answer.\n\n[ ] Exactly six section headings, in order, each on its own line.\n[ ] Every line from the DIALOGUE block appears verbatim inside a <d>[Japanese] ...</d>\n    tag in detailed_description. Count them: the number of <d> tags must equal the\n    number of dialogue lines the user supplied.\n[ ] Each <d> tag is preceded by a speaker ID such as (S1), placed OUTSIDE the tag.\n[ ] non_diegetic_music is \"N/A\" unless the user explicitly asked for music.\n[ ] <Subject 1> carries the physical detail from the CHARACTER PROFILE.\n[ ] No markdown fences, no preamble, no commentary.\n\n=====================  MODE: NEW CLIP  =====================\n\nThis is a fresh clip. There is no preceding video.\n\n- summary must start with [reference generation].\n- Do not use <Video N> or reference any continuation source.\n- [Shot 1] establishes the scene from scratch.\n"
+      ],
+      "title": "SYS-A: 新規クリップ",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 51,
+      "type": "ttN text",
+      "pos": [
+        2450,
+        400
+      ],
+      "size": [
+        430,
+        360
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        "You are a Cinematic Director and Master Prompt Engineer for the MiniMax H3\nmultimodal video+audio generation model, operating in Full-Reference Mode (ref2va).\n\nOutput ONLY the six sections below, in this exact order, each heading on its own line.\nNo preamble, no commentary, no markdown code fences, no backticks, no <think> tags.\n\nsubject_definitions\nsummary\nretention_analysis\ndetailed_description\noverall_soundscape\nnon_diegetic_music\n\n=====================  SECTION RULES  =====================\n\n1. subject_definitions\n   One line per referenced item. Labels:\n     <Subject N>  reusable visible content (person, animal, outfit, prop, environment, style)\n     <Picture N>  a reference image used as a concrete frame or composition anchor\n     <Video N>    a reference video providing an editing source / continuation start / timing\n     <Audio N>    an audio signal that is copied or referenced\n   Reference numbering follows the order the assets are presented to the model:\n   images first, then videos, then standalone audio; 1-based within each type.\n   For the main character, paste the physical detail from the CHARACTER PROFILE supplied\n   by the user into the <Subject 1> line. Do not summarise it away.\n\n2. summary\n   One short English paragraph starting with a bracketed task type, e.g.\n     [reference generation]\n     [video continuation + reference generation + audio reference]\n   Use only the previously defined labels. Introduce no new labels here.\n\n3. retention_analysis\n   One line per label, using these exact markers.\n     visual: fully_preserved | partially_preserved | attribute_transfer | weak_reference\n     audio:  fully_copy | partially_copy | reference | weak_reference\n   Format:\n     <Subject 1> (appears in [Shot 1], [Shot 2]): fully_preserved - <what is retained>\n   Every <Subject N> defined in section 1 MUST appear here.\n   Unless the user explicitly asks for a change, people are fully_preserved for\n   face, hair and outfit.\n\n4. detailed_description\n   The main body, in target-video playback order.\n   - Open with one or two English sentences establishing the overall visual style,\n     BEFORE [Shot 1].\n   - [Shot 1] has no timestamp. Later shots start with \"[Shot N] At MM:SS.mmm, \".\n     Cut times must strictly increase and stay inside the video duration.\n   - Camera motion is written as natural English inside the shot. Vocabulary:\n     Zoom In/Out, Push In, Pull Out, Pan Left/Right, Truck Left/Right, Tilt Up/Down,\n     Pedestal Up/Down, Arc Shot, Tracking Shot, Static Shot, Shake Slightly/Strongly,\n     POV, Roll Clockwise/Counterclockwise; optionally \"with small/large amplitude\"\n     and \"at slow/fast speed\".\n   - Speakers get stable IDs (S1), (S2)... assigned in order of first vocal event and\n     reused in every later shot. Two people speaking together is (S1,S2).\n   - Dialogue is written as:  <d>[Japanese] ...</d>\n     The speaker ID, action and delivery go OUTSIDE the <d> tags.\n   - Describe the character using the <Subject N> label plus the physical detail on\n     first appearance; afterwards reuse the label without redefining it.\n   - Target 350-500 English words for generation tasks.\n\n5. overall_soundscape\n   1-4 English sentences: ambience, physical action sounds, non-verbal human sounds.\n   Do NOT repeat dialogue here. Use N/A only if the user asked for total silence.\n\n6. non_diegetic_music\n   Background score that only the audience hears.\n\n=====================  HARD RULES  =====================\n\nR1. DIALOGUE IS SACRED - THIS IS THE MOST IMPORTANT RULE.\n    The user's input ends with a \"DIALOGUE (verbatim)\" block.\n    Every line in that block MUST appear inside detailed_description, wrapped in\n    <d>[Japanese] ...</d>, in the given order, copied character-for-character.\n    No rewording. No summarising. No translation. No politeness-level change.\n    No added or removed punctuation.\n\n    It is NOT acceptable to write \"she delivers the first line\" or \"she greets the\n    camera\". The literal Japanese text MUST be present inside the <d> tags.\n\n    WRONG:\n      <Subject 1> (S1) smiles and delivers her opening greeting to the camera.\n    RIGHT:\n      <Subject 1> (S1) smiles at the camera and says,\n      <d>[Japanese] みんな、来てくれてありがとう！</d>\n\n    Only if that block is empty or says NONE may you invent dialogue yourself.\n\nR2. NO SCORE UNLESS ASKED.\n    Write exactly \"N/A\" under non_diegetic_music unless the user explicitly requested\n    background music. Do not describe score-like music anywhere else either. The BGM is\n    added later as a separate audio track.\n\nR3. VERTICAL FRAMING.\n    The output is a vertical 9:16 short-form video watched on a phone. Favour close-ups\n    and medium close-ups. Keep the subject centred and in the upper half. Avoid wide\n    panoramas and horizontally spread group compositions.\n\nR4. LANGUAGE SPLIT.\n    All description, analysis and camera direction in English. Dialogue, lyrics and any\n    text visibly written in the scene keep their original language.\n\nR5. Respect the requested duration. Fit the whole dialogue timeline inside it rather\n    than padding to a word count.\n\n=====================  FINAL CHECK BEFORE YOU ANSWER  =====================\n\nVerify all of the following. If any fails, fix it before emitting your answer.\n\n[ ] Exactly six section headings, in order, each on its own line.\n[ ] Every line from the DIALOGUE block appears verbatim inside a <d>[Japanese] ...</d>\n    tag in detailed_description. Count them: the number of <d> tags must equal the\n    number of dialogue lines the user supplied.\n[ ] Each <d> tag is preceded by a speaker ID such as (S1), placed OUTSIDE the tag.\n[ ] non_diegetic_music is \"N/A\" unless the user explicitly asked for music.\n[ ] <Subject 1> carries the physical detail from the CHARACTER PROFILE.\n[ ] No markdown fences, no preamble, no commentary.\n\n=====================  MODE: CONTINUATION  =====================\n\nThis clip continues directly from a previous clip. The tail of that clip is supplied to\nthe model as <Video 1>, and its soundtrack as <Audio 1>.\n\nC1. summary MUST start with:\n    [video continuation + reference generation + audio reference] The target video\n    continues from <Video 1>.\n\nC2. subject_definitions MUST contain these lines (in addition to the character subjects):\n    <Video 1> is the final segment of the preceding clip and defines the starting state,\n    camera position, subject pose, framing and lighting that the target video continues from.\n    <Audio 1> is the synchronized audio track of <Video 1>, used for ambient and vocal\n    continuity.\n\nC3. retention_analysis MUST contain:\n    <Video 1> (continuation source): fully_preserved - the subject pose, framing and\n    lighting at the end of <Video 1> are carried into the first frame of [Shot 1].\n    <Audio 1>: reference - ambient tone and speaker timbre continue without copying the signal.\n\nC4. [Shot 1] MUST pick up seamlessly from the final frame of <Video 1>. Do not start in a\n    new location, a new outfit, or a radically different framing. Describe the character as\n    already being in the position <Video 1> ended on, then continue the action forward.\n\nC5. Use the \"PREVIOUS CLIP\" information supplied by the user so that the action, emotion\n    and conversation continue naturally.\n"
+      ],
+      "title": "SYS-B: 続き生成（Ctrl+B で有効化）",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 52,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        2450,
+        800
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any_01",
+          "type": "*",
+          "link": 48
+        },
+        {
+          "name": "any_02",
+          "type": "*",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "*",
+          "type": "*",
+          "links": [
+            53
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Any Switch (rgthree)"
+      },
+      "widgets_values": [],
+      "title": "MODE: 続き > 新規"
+    },
+    {
+      "id": 53,
+      "type": "llama_cpp_parameters",
+      "pos": [
+        2450,
+        920
+      ],
+      "size": [
+        430,
+        360
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "parameters",
+          "type": "LLAMACPPARAMS",
+          "links": [
+            51
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_parameters"
+      },
+      "widgets_values": [
+        3072,
+        40,
+        0.92,
+        0.05,
+        1.0,
+        0.7,
+        1.05,
+        0.0,
+        0.0,
+        0,
+        0.1,
+        5.0,
+        -1
+      ],
+      "title": "params: director"
+    },
+    {
+      "id": 54,
+      "type": "llama_cpp_instruct_adv",
+      "pos": [
+        2450,
+        1320
+      ],
+      "size": [
+        430,
+        400
+      ],
+      "flags": {},
+      "order": 83,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "llama_model",
+          "type": "LLAMACPPMODEL",
+          "link": 50
+        },
+        {
+          "name": "parameters",
+          "type": "LLAMACPPARAMS",
+          "link": 51
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 52
+        },
+        {
+          "name": "queue_handler",
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "system_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "system_prompt"
+          },
+          "link": 53
+        },
+        {
+          "name": "custom_prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "custom_prompt"
+          },
+          "link": 54
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            55
+          ]
+        },
+        {
+          "name": "output_list",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "state_uid",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_instruct_adv"
+      },
+      "widgets_values": [
+        "Empty - Nothing",
+        "Using the reference sheet you can see and the structured request below, produce the six-section MiniMax H3 Full-Reference prompt. Output the six sections only.",
+        "",
+        "images",
+        8,
+        768,
+        1,
+        "randomize",
+        true,
+        false
+      ],
+      "title": "② H3 プロンプト生成",
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 55,
+      "type": "CR Text Replace",
+      "pos": [
+        2450,
+        1760
+      ],
+      "size": [
+        430,
+        220
+      ],
+      "flags": {},
+      "order": 84,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 55
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "*",
+          "links": [
+            56
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Text Replace"
+      },
+      "widgets_values": [
+        "```",
+        "",
+        "<think>",
+        "",
+        "</think>",
+        ""
+      ],
+      "title": "余分なタグを除去"
+    },
+    {
+      "id": 56,
+      "type": "ShowText|pysssss",
+      "pos": [
+        2450,
+        2020
+      ],
+      "size": [
+        430,
+        420
+      ],
+      "flags": {},
+      "order": 85,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 56
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [],
+      "title": "H3 Director Prompt (ここで直接編集可)",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 57,
+      "type": "ttN text",
+      "pos": [
+        2450,
+        2480
+      ],
+      "size": [
+        430,
+        300
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            57
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ttN text"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "プロンプト手動入力（VLMを飛ばす）"
+    },
+    {
+      "id": 58,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        2450,
+        2820
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 86,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any_01",
+          "type": "*",
+          "link": 57
+        },
+        {
+          "name": "any_02",
+          "type": "*",
+          "link": 58
+        }
+      ],
+      "outputs": [
+        {
+          "name": "*",
+          "type": "*",
+          "links": [
+            59
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Any Switch (rgthree)"
+      },
+      "widgets_values": [],
+      "title": "PROMPT: 手動 > 自動"
+    },
+    {
+      "id": 59,
+      "type": "llama_cpp_unload_model",
+      "pos": [
+        2450,
+        2940
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 87,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any",
+          "type": "*",
+          "link": 59
+        }
+      ],
+      "outputs": [
+        {
+          "name": "any",
+          "type": "*",
+          "links": [
+            60
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "llama_cpp_unload_model"
+      },
+      "widgets_values": [],
+      "title": "VLM をアンロード（H3 の前に必ず実行）"
+    },
+    {
+      "id": 60,
+      "type": "LayerUtility: PurgeVRAM V2",
+      "pos": [
+        2450,
+        3060
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 88,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "anything",
+          "type": "*",
+          "link": 60
+        }
+      ],
+      "outputs": [
+        {
+          "name": "any",
+          "type": "*",
+          "links": [
+            88
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayerUtility: PurgeVRAM V2"
+      },
+      "widgets_values": [
+        true,
+        true
+      ],
+      "title": "VRAM 解放 → この出力が H3 の prompt になる"
+    },
+    {
+      "id": 61,
+      "type": "MarkdownNote",
+      "pos": [
+        5750,
+        0
+      ],
+      "size": [
+        430,
+        300
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# 続き生成（Tail Relay）\n\n前クリップの**末尾数秒**を `<Video 1>` として H3 に戻します。\n\n## 手順\n1. まず普通に1本目を生成し、**80 Output** に保存された mp4 を確認\n2. その mp4 を ComfyUI の input フォルダに置く（またはアップロード）\n3. このグループのノードを全選択して **Ctrl+B**（バイパス解除）\n4. `前クリップの動画` でその mp4 を選択\n5. **SYS-B: 続き生成** を Ctrl+B で有効化\n6. **③前クリップ情報** を Ctrl+B で有効化し、前の内容を日本語で要約\n7. 実行\n\n## tail フレーム数\nH3 は参照動画のフレーム数を `n %% 17 == 5` に**切り下げ**ます。\n下記ならロスなしです。\n\n| frames | 秒 | 向き |\n|---|---|---|\n| 39 | 1.63 | ドリフト最小 |\n| 56 | 2.33 | **推奨** |\n| 73 | 3.04 | 会話の途中でつなぐ |\n| 90 | 3.75 | 長回し感を維持 |\n\n## 重要\n続き生成中も **10 Character Master は接続したまま**にしてください。\n`<Video 1>` だけだと数クリップで人物が崩れていきます。\n"
+      ],
+      "title": "45 続き生成の使い方",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 62,
+      "type": "PrimitiveInt",
+      "pos": [
+        5750,
+        340
+      ],
+      "size": [
+        430,
+        80
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            64,
+            67,
+            68,
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        56
+      ],
+      "title": "tail フレーム数 (39/56/73/90 推奨)"
+    },
+    {
+      "id": 63,
+      "type": "LoadVideo",
+      "pos": [
+        5750,
+        460
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            61
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "前クリップの動画"
+    },
+    {
+      "id": 64,
+      "type": "GetVideoComponents",
+      "pos": [
+        5750,
+        620
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 49,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 61
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            62
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            70
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "bit_depth",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents"
+      },
+      "widgets_values": [],
+      "title": "分解"
+    },
+    {
+      "id": 65,
+      "type": "GetImageSizeAndCount",
+      "pos": [
+        5750,
+        780
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 62
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            65
+          ]
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSizeAndCount"
+      },
+      "widgets_values": [],
+      "title": "総フレーム数を取得"
+    },
+    {
+      "id": 66,
+      "type": "MathExpression|pysssss",
+      "pos": [
+        5750,
+        940
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "a",
+          "type": "*",
+          "link": 63
+        },
+        {
+          "name": "b",
+          "type": "*",
+          "link": 64
+        },
+        {
+          "name": "c",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            66
+          ]
+        },
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MathExpression|pysssss"
+      },
+      "widgets_values": [
+        "max(0, a - b)"
+      ],
+      "title": "開始位置 = count - tail"
+    },
+    {
+      "id": 67,
+      "type": "ImageFromBatch",
+      "pos": [
+        5750,
+        1100
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 65
+        },
+        {
+          "name": "batch_index",
+          "type": "INT",
+          "widget": {
+            "name": "batch_index"
+          },
+          "link": 66
+        },
+        {
+          "name": "length",
+          "type": "INT",
+          "widget": {
+            "name": "length"
+          },
+          "link": 67
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch"
+      },
+      "widgets_values": [
+        0,
+        56
+      ],
+      "title": "末尾フレームを切り出し",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 68,
+      "type": "MathExpression|pysssss",
+      "pos": [
+        5750,
+        1280
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "a",
+          "type": "*",
+          "link": 68
+        },
+        {
+          "name": "b",
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "c",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MathExpression|pysssss"
+      },
+      "widgets_values": [
+        "a / 24.0"
+      ],
+      "title": "tail 秒数"
+    },
+    {
+      "id": 69,
+      "type": "MathExpression|pysssss",
+      "pos": [
+        5750,
+        1440
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "a",
+          "type": "*",
+          "link": 69
+        },
+        {
+          "name": "b",
+          "type": "*",
+          "link": null
+        },
+        {
+          "name": "c",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MathExpression|pysssss"
+      },
+      "widgets_values": [
+        "0.0 - (a / 24.0)"
+      ],
+      "title": "tail 秒数（負）= 末尾から"
+    },
+    {
+      "id": 70,
+      "type": "TrimAudioDuration",
+      "pos": [
+        5750,
+        1600
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 70
+        },
+        {
+          "name": "start_index",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_index"
+          },
+          "link": 71
+        },
+        {
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": 72
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            86
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TrimAudioDuration"
+      },
+      "widgets_values": [
+        -2.3333333333333335,
+        2.3333333333333335
+      ],
+      "title": "末尾音声を切り出し",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 71,
+      "type": "MarkdownNote",
+      "pos": [
+        3000,
+        0
+      ],
+      "size": [
+        430,
+        300
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# モデル\n\n## 本体（どちらか1つ）\n- **★基準: `minimax_h3_ref2va_pruned_int8_convrot.safetensors`**（19.53 GiB / 導入済）\n  記事WFのDLメタデータと一致。`_pruned_comfyui` の Turbo LoRA と組み合わせる前提。\n- 代替: `MiniMax-H3-Ref2VA-Q4_K_S.gguf`（**18.49 GiB** / 未導入）\n  非pruned本体の量子化なので 12GB には載りません。GGUFにする利点は限定的です。\n\n※ 導入済の `minimax_h3_fl2va_*` は **FL2VA（初・終フレーム用）**で、\n参照画像による人物保持には使えません。\n\n## テキストエンコーダ\n- **★基準: `qwen3vl_32b_minimax_h3_int8_convrot.safetensors`**\n  記事ワークフローが実際に選択している値です。4070 Ti ではこれを基準にしてください。\n- 代替1: GGUF `qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf`（12GB VRAM 向け・RAMオフロードが効く）\n- 代替2: 導入済の `nvfp4_awq` は **NVFP4 = RTX 50系向け**の形式です。\n  記事 JSON でも実際に選択されていたのは int8_convrot で、\n  nvfp4 は添付メタデータの DL URL に出てくるだけでした。\n  **実動の裏付けはありません。**最後の手段として置いてあります。\n\n## VAE（導入済）\nvideo / audio の2つともロード済みです。\n\n## Turbo LoRA\n2段で 6〜8 step に短縮します。未導入の場合は\n両方を Ctrl+B でバイパスし、**8 Steps → 25 前後**に上げてください。\n\n## 省メモリ Attention（任意）\n`MiniMaxH3MemoryEfficientSageAttentionPatch`（KJNodes v1.4.9+）を\n`SageAttention` の後ろに挟むと、sageattention 使用時のピーク VRAM が少し下がります。\n本機の KJNodes は v1.4.8 のため未導入です。Phase 1 では使っていません。\n"
+      ],
+      "title": "50 モデルの選び方",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 72,
+      "type": "UNETLoader",
+      "pos": [
+        3000,
+        340
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            73
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "title": "H3 Ref2VA pruned int8_convrot ★基準",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 73,
+      "type": "UnetLoaderGGUF",
+      "pos": [
+        3000,
+        490
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UnetLoaderGGUF"
+      },
+      "widgets_values": [
+        "MiniMax-H3-Ref2VA-Q4_K_S.gguf"
+      ],
+      "title": "代替: H3 Ref2VA GGUF Q4_K_S (18.5GiB/未導入)"
+    },
+    {
+      "id": 74,
+      "type": "CLIPLoader",
+      "pos": [
+        3000,
+        620
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            78
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "title": "TextEnc: Qwen3-VL-32B nvfp4 ★基準 (GPU)",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 75,
+      "type": "CLIPLoaderGGUF",
+      "pos": [
+        3000,
+        800
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoaderGGUF"
+      },
+      "widgets_values": [
+        "qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+        "minimax"
+      ],
+      "title": "代替1: TextEnc GGUF Q4_K_M (未導入)"
+    },
+    {
+      "id": 76,
+      "type": "CLIPLoader",
+      "pos": [
+        3000,
+        950
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "minimax",
+        "cpu"
+      ],
+      "title": "代替2: int8_convrot (CPU実行/約37分)"
+    },
+    {
+      "id": 77,
+      "type": "VAELoader",
+      "pos": [
+        3000,
+        1130
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            79,
+            99
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_fp16.safetensors"
+      ],
+      "title": "H3 video VAE",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 78,
+      "type": "VAELoader",
+      "pos": [
+        3000,
+        1260
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            80,
+            101
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "title": "H3 audio VAE",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 79,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        3000,
+        1390
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 73
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            74
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors",
+        1.0
+      ],
+      "title": "Turbo LoRA 1",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 80,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        3000,
+        1550
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 58,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "minimax_h3_turbo_4step_ckpt850_pruned_comfyui.safetensors",
+        0.5
+      ],
+      "title": "Turbo LoRA 2",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 81,
+      "type": "PathchSageAttentionKJ",
+      "pos": [
+        3000,
+        1710
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PathchSageAttentionKJ"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ],
+      "title": "SageAttention（問題が出たら Ctrl+B）"
+    },
+    {
+      "id": 82,
+      "type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+      "pos": [
+        3000,
+        1860
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3MemoryEfficientSageAttentionPatch"
+      },
+      "widgets_values": [],
+      "title": "H3 省メモリ Attention（同上）"
+    },
+    {
+      "id": 83,
+      "type": "MiniMaxH3SigmaShift",
+      "pos": [
+        3000,
+        1990
+      ],
+      "size": [
+        430,
+        120
+      ],
+      "flags": {},
+      "order": 67,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 77
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            90,
+            92
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3SigmaShift"
+      },
+      "widgets_values": [
+        12.0,
+        6.0
+      ],
+      "title": "Sigma Shift"
+    },
+    {
+      "id": 84,
+      "type": "MarkdownNote",
+      "pos": [
+        3550,
+        0
+      ],
+      "size": [
+        430,
+        330
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# 解像度と尺\n\n## 縦型（9:16）プリセット\n| 用途 | width | height | 備考 |\n|---|---|---|---|\n| 高速確認 | 288 | 512 | 厳密に 9:16 |\n| 下書き | 576 | 1024 | 厳密に 9:16 |\n| **本番** | **768** | **1344** | 面積上限。仕上げで微クロップ |\n\nH3 の面積上限は 768x1344 = 1,032,192 px。幅・高さとも **32 の倍数**。\n\n## 尺（length）\n`n %% 17 == 5` に揃える必要があり、**fps は 24 固定**。\n30 グループの「尺（秒）」を変えれば自動で揃えます。\n\nノードの tooltip 上の学習済レンジは **124〜362 フレーム（約 5.2〜15.1 秒）**です。\nこの外も入力自体は可能ですが未検証領域になります。\n\n## ref_image_size\n- `max`  : 短辺 2048 まで使う。同一性重視。参照トークンが毎ステップ乗るので遅い\n- `match`: 生成面積に合わせて縮小。速い\n\nどちらも**拡大はしません**。参照画像が小さいと max にしても差が出ません。\n"
+      ],
+      "title": "60 解像度と尺のプリセット",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 85,
+      "type": "LoadAudio",
+      "pos": [
+        3550,
+        370
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            87
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "",
+        null,
+        null
+      ],
+      "title": "声質リファレンス（任意）"
+    },
+    {
+      "id": 86,
+      "type": "MiniMaxH3ReferenceToVideo",
+      "pos": [
+        3550,
+        550
+      ],
+      "size": [
+        430,
+        560
+      ],
+      "flags": {},
+      "order": 89,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 78
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 79
+        },
+        {
+          "name": "audio_vae",
+          "type": "VAE",
+          "link": 80
+        },
+        {
+          "label": "ref_image_0",
+          "name": "ref_images.ref_image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 81
+        },
+        {
+          "label": "ref_image_1",
+          "name": "ref_images.ref_image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 82
+        },
+        {
+          "label": "ref_image_2",
+          "name": "ref_images.ref_image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 83
+        },
+        {
+          "label": "ref_image_3",
+          "name": "ref_images.ref_image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 84
+        },
+        {
+          "label": "ref_image_4",
+          "name": "ref_images.ref_image_4",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "label": "ref_video_0",
+          "name": "ref_videos.ref_video_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 85
+        },
+        {
+          "label": "ref_video_audio_0",
+          "name": "ref_video_audios.ref_video_audio_0",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 86
+        },
+        {
+          "label": "ref_audio_0",
+          "name": "ref_audios.ref_audio_0",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 87
+        },
+        {
+          "label": "ref_audio_1",
+          "name": "ref_audios.ref_audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 88
+        },
+        {
+          "name": "length",
+          "type": "INT",
+          "widget": {
+            "name": "length"
+          },
+          "link": 89
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            91
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            97
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ReferenceToVideo"
+      },
+      "widgets_values": [
+        "",
+        768,
+        1344,
+        192,
+        "max"
+      ],
+      "title": "③ MiniMax H3 Reference to Video",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 87,
+      "type": "RandomNoise",
+      "pos": [
+        3550,
+        1150
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            93
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        123456789,
+        "fixed"
+      ],
+      "title": "noise"
+    },
+    {
+      "id": 88,
+      "type": "BasicGuider",
+      "pos": [
+        3550,
+        1300
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 90,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 90
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 91
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            94
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider"
+      },
+      "widgets_values": [],
+      "title": "guider"
+    },
+    {
+      "id": 89,
+      "type": "KSamplerSelect",
+      "pos": [
+        3550,
+        1430
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            95
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "res_multistep"
+      ],
+      "title": "sampler"
+    },
+    {
+      "id": 90,
+      "type": "BasicScheduler",
+      "pos": [
+        3550,
+        1560
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 69,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 92
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            96
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "simple",
+        8,
+        1.0
+      ],
+      "title": "scheduler"
+    },
+    {
+      "id": 91,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        3550,
+        1740
+      ],
+      "size": [
+        430,
+        160
+      ],
+      "flags": {},
+      "order": 91,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 93
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 94
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 95
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 96
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 97
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            98,
+            100
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced"
+      },
+      "widgets_values": [],
+      "title": "sampling",
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 92,
+      "type": "VAEDecode",
+      "pos": [
+        3550,
+        1940
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 92,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 98
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 99
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            103
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": [],
+      "title": "decode video"
+    },
+    {
+      "id": 93,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        3550,
+        2070
+      ],
+      "size": [
+        430,
+        90
+      ],
+      "flags": {},
+      "order": 93,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 100
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 101
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            102,
+            104
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio"
+      },
+      "widgets_values": [],
+      "title": "decode audio"
+    },
+    {
+      "id": 94,
+      "type": "MarkdownNote",
+      "pos": [
+        4100,
+        0
+      ],
+      "size": [
+        430,
+        280
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# 音声レイヤー\n\nH3 は映像と音声を**1本の混ざったステレオ**として出します。\n後から BGM だけ差し替えるには、**混ぜる前に分ける**必要があります。\n\n## やり方\n1. プロンプト側で `non_diegetic_music: N/A` を強制\n   → SYS プロンプトの R2 ルールで自動的にかかります\n   → H3 の出力は「セリフ + 環境音」だけになります\n2. BGM は `LoadAudio` から別トラックで読み込み\n3. 音量（-12〜-18dB）→ EQ（中域 -3〜-6dB）→ `AudioMerge (add)`\n\n## BGM を差し替えるとき\n`LoadAudio` のファイルを変えて **70 以降だけ再実行**すれば済みます。\nH3 の生成をやり直す必要はありません。\n\n## 注意\n`AudioMerge` は **audio1 の長さに audio2 を合わせます**。\n必ず audio1 = H3 音声 / audio2 = BGM にしてください。\n"
+      ],
+      "title": "70 音声レイヤー",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 95,
+      "type": "PreviewAudio",
+      "pos": [
+        4100,
+        320
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 94,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 102
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAudio"
+      },
+      "widgets_values": [],
+      "title": "音声確認"
+    },
+    {
+      "id": 96,
+      "type": "CreateVideo",
+      "pos": [
+        4650,
+        0
+      ],
+      "size": [
+        430,
+        110
+      ],
+      "flags": {},
+      "order": 95,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 103
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 104
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            105
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        24.0,
+        8
+      ],
+      "title": "動画化 (fps=24 固定)",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 97,
+      "type": "SaveVideo",
+      "pos": [
+        4650,
+        150
+      ],
+      "size": [
+        430,
+        140
+      ],
+      "flags": {},
+      "order": 96,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 105
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "H3/%date:yyyyMMdd%/h3_%date:hhmmss%",
+        "auto",
+        "auto"
+      ],
+      "title": "保存（続き生成の入力になる）",
+      "color": "#232",
+      "bgcolor": "#353"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      5,
+      0,
+      10,
+      1,
+      "IMAGE"
+    ],
+    [
+      7,
+      7,
+      0,
+      10,
+      2,
+      "IMAGE"
+    ],
+    [
+      8,
+      9,
+      0,
+      10,
+      3,
+      "IMAGE"
+    ],
+    [
+      9,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      11,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      13,
+      0,
+      16,
+      0,
+      "LLAMACPPMODEL"
+    ],
+    [
+      12,
+      14,
+      0,
+      16,
+      1,
+      "LLAMACPPARAMS"
+    ],
+    [
+      13,
+      11,
+      0,
+      16,
+      2,
+      "IMAGE"
+    ],
+    [
+      14,
+      15,
+      0,
+      16,
+      4,
+      "STRING"
+    ],
+    [
+      15,
+      16,
+      0,
+      17,
+      0,
+      "STRING"
+    ],
+    [
+      16,
+      18,
+      0,
+      19,
+      0,
+      "STRING"
+    ],
+    [
+      17,
+      17,
+      0,
+      19,
+      1,
+      "STRING"
+    ],
+    [
+      18,
+      25,
+      0,
+      26,
+      0,
+      "INT"
+    ],
+    [
+      19,
+      24,
+      0,
+      26,
+      1,
+      "FLOAT"
+    ],
+    [
+      20,
+      26,
+      0,
+      27,
+      0,
+      "INT"
+    ],
+    [
+      21,
+      26,
+      0,
+      28,
+      0,
+      "INT"
+    ],
+    [
+      22,
+      29,
+      0,
+      37,
+      0,
+      "STRING"
+    ],
+    [
+      23,
+      19,
+      0,
+      37,
+      1,
+      "*"
+    ],
+    [
+      24,
+      37,
+      0,
+      38,
+      0,
+      "STRING"
+    ],
+    [
+      25,
+      30,
+      0,
+      38,
+      1,
+      "STRING"
+    ],
+    [
+      26,
+      38,
+      0,
+      39,
+      0,
+      "STRING"
+    ],
+    [
+      27,
+      20,
+      0,
+      39,
+      1,
+      "STRING"
+    ],
+    [
+      28,
+      39,
+      0,
+      40,
+      0,
+      "STRING"
+    ],
+    [
+      29,
+      33,
+      0,
+      40,
+      1,
+      "STRING"
+    ],
+    [
+      30,
+      40,
+      0,
+      41,
+      0,
+      "STRING"
+    ],
+    [
+      31,
+      22,
+      0,
+      41,
+      1,
+      "STRING"
+    ],
+    [
+      32,
+      41,
+      0,
+      42,
+      0,
+      "STRING"
+    ],
+    [
+      33,
+      34,
+      0,
+      42,
+      1,
+      "STRING"
+    ],
+    [
+      34,
+      42,
+      0,
+      43,
+      0,
+      "STRING"
+    ],
+    [
+      35,
+      23,
+      0,
+      43,
+      1,
+      "STRING"
+    ],
+    [
+      36,
+      43,
+      0,
+      44,
+      0,
+      "STRING"
+    ],
+    [
+      37,
+      35,
+      0,
+      44,
+      1,
+      "STRING"
+    ],
+    [
+      38,
+      44,
+      0,
+      45,
+      0,
+      "STRING"
+    ],
+    [
+      39,
+      28,
+      0,
+      45,
+      1,
+      "STRING"
+    ],
+    [
+      40,
+      45,
+      0,
+      46,
+      0,
+      "STRING"
+    ],
+    [
+      41,
+      36,
+      0,
+      46,
+      1,
+      "STRING"
+    ],
+    [
+      42,
+      46,
+      0,
+      47,
+      0,
+      "STRING"
+    ],
+    [
+      43,
+      31,
+      0,
+      47,
+      1,
+      "STRING"
+    ],
+    [
+      44,
+      47,
+      0,
+      48,
+      0,
+      "STRING"
+    ],
+    [
+      45,
+      21,
+      0,
+      48,
+      1,
+      "STRING"
+    ],
+    [
+      46,
+      48,
+      0,
+      49,
+      0,
+      "STRING"
+    ],
+    [
+      47,
+      32,
+      0,
+      49,
+      1,
+      "STRING"
+    ],
+    [
+      48,
+      51,
+      0,
+      52,
+      0,
+      "STRING"
+    ],
+    [
+      49,
+      50,
+      0,
+      52,
+      1,
+      "STRING"
+    ],
+    [
+      50,
+      13,
+      0,
+      54,
+      0,
+      "LLAMACPPMODEL"
+    ],
+    [
+      51,
+      53,
+      0,
+      54,
+      1,
+      "LLAMACPPARAMS"
+    ],
+    [
+      52,
+      11,
+      0,
+      54,
+      2,
+      "IMAGE"
+    ],
+    [
+      53,
+      52,
+      0,
+      54,
+      4,
+      "*"
+    ],
+    [
+      54,
+      49,
+      0,
+      54,
+      5,
+      "STRING"
+    ],
+    [
+      55,
+      54,
+      0,
+      55,
+      0,
+      "STRING"
+    ],
+    [
+      56,
+      55,
+      0,
+      56,
+      0,
+      "*"
+    ],
+    [
+      57,
+      57,
+      0,
+      58,
+      0,
+      "STRING"
+    ],
+    [
+      58,
+      56,
+      0,
+      58,
+      1,
+      "STRING"
+    ],
+    [
+      59,
+      58,
+      0,
+      59,
+      0,
+      "*"
+    ],
+    [
+      60,
+      59,
+      0,
+      60,
+      0,
+      "*"
+    ],
+    [
+      61,
+      63,
+      0,
+      64,
+      0,
+      "VIDEO"
+    ],
+    [
+      62,
+      64,
+      0,
+      65,
+      0,
+      "IMAGE"
+    ],
+    [
+      63,
+      65,
+      3,
+      66,
+      0,
+      "INT"
+    ],
+    [
+      64,
+      62,
+      0,
+      66,
+      1,
+      "INT"
+    ],
+    [
+      65,
+      65,
+      0,
+      67,
+      0,
+      "IMAGE"
+    ],
+    [
+      66,
+      66,
+      0,
+      67,
+      1,
+      "INT"
+    ],
+    [
+      67,
+      62,
+      0,
+      67,
+      2,
+      "INT"
+    ],
+    [
+      68,
+      62,
+      0,
+      68,
+      0,
+      "INT"
+    ],
+    [
+      69,
+      62,
+      0,
+      69,
+      0,
+      "INT"
+    ],
+    [
+      70,
+      64,
+      1,
+      70,
+      0,
+      "AUDIO"
+    ],
+    [
+      71,
+      69,
+      1,
+      70,
+      1,
+      "FLOAT"
+    ],
+    [
+      72,
+      68,
+      1,
+      70,
+      2,
+      "FLOAT"
+    ],
+    [
+      73,
+      72,
+      0,
+      79,
+      0,
+      "MODEL"
+    ],
+    [
+      74,
+      79,
+      0,
+      80,
+      0,
+      "MODEL"
+    ],
+    [
+      75,
+      80,
+      0,
+      81,
+      0,
+      "MODEL"
+    ],
+    [
+      76,
+      81,
+      0,
+      82,
+      0,
+      "MODEL"
+    ],
+    [
+      77,
+      82,
+      0,
+      83,
+      0,
+      "MODEL"
+    ],
+    [
+      78,
+      74,
+      0,
+      86,
+      0,
+      "CLIP"
+    ],
+    [
+      79,
+      77,
+      0,
+      86,
+      1,
+      "VAE"
+    ],
+    [
+      80,
+      78,
+      0,
+      86,
+      2,
+      "VAE"
+    ],
+    [
+      81,
+      3,
+      0,
+      86,
+      3,
+      "IMAGE"
+    ],
+    [
+      82,
+      5,
+      0,
+      86,
+      4,
+      "IMAGE"
+    ],
+    [
+      83,
+      7,
+      0,
+      86,
+      5,
+      "IMAGE"
+    ],
+    [
+      84,
+      9,
+      0,
+      86,
+      6,
+      "IMAGE"
+    ],
+    [
+      85,
+      67,
+      0,
+      86,
+      8,
+      "IMAGE"
+    ],
+    [
+      86,
+      70,
+      0,
+      86,
+      9,
+      "AUDIO"
+    ],
+    [
+      87,
+      85,
+      0,
+      86,
+      10,
+      "AUDIO"
+    ],
+    [
+      88,
+      60,
+      0,
+      86,
+      12,
+      "*"
+    ],
+    [
+      89,
+      26,
+      0,
+      86,
+      13,
+      "INT"
+    ],
+    [
+      90,
+      83,
+      0,
+      88,
+      0,
+      "MODEL"
+    ],
+    [
+      91,
+      86,
+      0,
+      88,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      92,
+      83,
+      0,
+      90,
+      0,
+      "MODEL"
+    ],
+    [
+      93,
+      87,
+      0,
+      91,
+      0,
+      "NOISE"
+    ],
+    [
+      94,
+      88,
+      0,
+      91,
+      1,
+      "GUIDER"
+    ],
+    [
+      95,
+      89,
+      0,
+      91,
+      2,
+      "SAMPLER"
+    ],
+    [
+      96,
+      90,
+      0,
+      91,
+      3,
+      "SIGMAS"
+    ],
+    [
+      97,
+      86,
+      1,
+      91,
+      4,
+      "LATENT"
+    ],
+    [
+      98,
+      91,
+      0,
+      92,
+      0,
+      "LATENT"
+    ],
+    [
+      99,
+      77,
+      0,
+      92,
+      1,
+      "VAE"
+    ],
+    [
+      100,
+      91,
+      0,
+      93,
+      0,
+      "LATENT"
+    ],
+    [
+      101,
+      78,
+      0,
+      93,
+      1,
+      "VAE"
+    ],
+    [
+      102,
+      93,
+      0,
+      95,
+      0,
+      "AUDIO"
+    ],
+    [
+      103,
+      92,
+      0,
+      96,
+      0,
+      "IMAGE"
+    ],
+    [
+      104,
+      93,
+      0,
+      96,
+      1,
+      "AUDIO"
+    ],
+    [
+      105,
+      96,
+      0,
+      97,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "00 README",
+      "bounding": [
+        -740,
+        -110,
+        640,
+        910
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "10 Character Master",
+      "bounding": [
+        -40,
+        -110,
+        880,
+        2590
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "20 Character Profile",
+      "bounding": [
+        860,
+        -110,
+        480,
+        2320
+      ],
+      "color": "#a1309b",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "30 日本語入力",
+      "bounding": [
+        1360,
+        -110,
+        510,
+        1880
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "40 H3 Director Prompt",
+      "bounding": [
+        1910,
+        -110,
+        1010,
+        3320
+      ],
+      "color": "#a1309b",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "45 Tail Relay 続き生成",
+      "bounding": [
+        5710,
+        -110,
+        510,
+        1890
+      ],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "50 H3 Models",
+      "bounding": [
+        2960,
+        -110,
+        510,
+        2260
+      ],
+      "color": "#88A",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "60 H3 Reference to Video",
+      "bounding": [
+        3510,
+        -110,
+        510,
+        2310
+      ],
+      "color": "#b06634",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "70 Audio",
+      "bounding": [
+        4060,
+        -110,
+        510,
+        580
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "80 Output",
+      "bounding": [
+        4610,
+        -110,
+        510,
+        440
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.45,
+      "offset": [
+        0,
+        0
+      ]
+    }
+  },
+  "version": 0.4
+}

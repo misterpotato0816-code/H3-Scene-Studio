@@ -1,0 +1,20 @@
+subject_definitions
+<Subject 1> Round face, almond-shaped eyes, light purple irises, thin eyebrows, small nose, small mouth, fair skin tone, Pastel pink medium length layered hair with blunt bangs covering the forehead, slender build, white corset-style top with a plunging neckline, light purple ribbon tied at the neck, white puff sleeves with ruffled cuffs, white high-waisted skirt section visible below the bodice, small silver hair clip on the left side of the head
+summary
+[reference generation] A close-up portrait of <Subject 1> in a vibrant stage setting, featuring two lines of Japanese dialogue.
+retention_analysis
+<Subject 1> (appears in [Shot 1], [Shot 2]): fully_preserved - face, hair, outfit, accessories
+detailed_description
+The visual style is bright and highly saturated, resembling a high-energy J-pop music video set on a futuristic stage. The frame is vertical, focusing tightly on the subject's expressive upper body.
+
+[Shot 1] Static Shot. <Subject 1>, wearing the white corset-style top and pastel pink hair, smiles brightly at the camera. She performs a graceful, welcoming hand gesture near her chest.
+<Subject 1> (S1) smiles warmly and says,
+<d>[みんな、来てくれてありがとう！]</d>
+
+[Shot 2] At 00:03.500, A slow Push In on <Subject 1>'s face as she maintains intense eye contact with the camera. Her expression becomes slightly more playful and confident.
+<Subject 1> (S1) leans slightly forward and says,
+<d>[今日は最後まで楽しんでいってね。]</d>
+overall_soundscape
+The soundscape is dominated by subtle electronic stage ambience, including faint synthetic whooshes and low-frequency bass thumps characteristic of a live performance venue. There are no distinct physical actions other than the movement of the subject's hands.
+non_diegetic_music
+N/A

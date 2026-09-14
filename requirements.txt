@@ -1,0 +1,16 @@
+# Direct third-party Python dependencies used by H3's own source.
+# Install these into the existing ComfyUI virtual environment.
+# torch, folder_paths, and comfy_api are supplied by ComfyUI and are therefore
+# intentionally not installed or pinned here.
+aiohttp
+huggingface-hub
+pywin32; platform_system == "Windows"
+# Reference-image verification and thumbnails (ComfyUI environments already
+# have it; listed so a fresh environment does not miss it).
+Pillow
+# Launcher / safe shutdown (process identity, port ownership).
+psutil
+# Story seam analysis uses numpy and (optionally) OpenCV. Both come with a
+# normal ComfyUI environment; OpenCV is deliberately not pinned here so an
+# existing opencv-python install is not replaced by a conflicting variant.
+numpy

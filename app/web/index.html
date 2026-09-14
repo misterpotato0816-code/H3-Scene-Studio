@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H3 / Scene Studio</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/studio.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brandrow">
+    <div class="brand">
+      <h1><span class="studio-mark" aria-hidden="true">H3</span> SCENE STUDIO</h1>
+      <p class="sub">映像と、声と、その間をつくる。</p>
+    </div>
+    <div class="chips" id="sysChips" aria-label="system status"></div>
+    <button type="button" id="btnMediaFolder" class="btn media" title="生成したMP4の保存先（H3_Media\Videos）を開きます">📁 生成動画フォルダ</button>
+    <button type="button" id="btnAiSettings" class="btn">設定</button>
+    <!-- WP-D: safe shutdown entry point (same action also in settings dialog). -->
+    <button type="button" id="btnShutdown" class="btn danger">H3を終了</button>
+  </div>
+  <div id="mediaFolderNotice" class="path-notice" hidden role="status">
+    <span id="mediaFolderNoticeText"></span>
+    <button type="button" id="btnCopyMediaPath" class="btn">パスをコピー</button>
+    <button type="button" id="btnCloseMediaNotice" class="btn" aria-label="閉じる">閉じる</button>
+  </div>
+  <p id="engineStatus" class="engine">エンジンの状態を確認しています…</p>
+  <details class="diag" id="diagDetails">
+    <summary id="diagSummary">System READY</summary>
+    <div id="diagBody" class="diagbody"></div>
+    <div class="cleanup" id="cleanupBox">
+      <div class="cleanuprow">
+        <button type="button" id="btnCleanupScan" class="btn">🧹 古い内部コピーを掃除</button>
+        <label class="agelb">対象
+          <select id="cleanupAge">
+            <option value="1" selected>1日以上前</option>
+            <option value="3">3日以上前</option>
+            <option value="7">7日以上前</option>
+            <option value="30">30日以上前</option>
+          </select>
+        </label>
+      </div>
+      <p class="hint">H3_Mediaへexport済みの内部重複だけを候補にします。H3_Media本体・証拠・作業中ファイルは触りません。まずスキャンのみ行い、削除は確認後に実行します。</p>
+      <div id="cleanupResult" class="cleanupres" hidden>
+        <p id="cleanupSummary" class="counter"></p>
+        <details class="sub-details" id="cleanupListWrap" hidden>
+          <summary>一覧を見る</summary>
+          <div id="cleanupList" class="cleanuplist"></div>
+        </details>
+        <div class="actions">
+          <button type="button" id="btnCleanupDo" class="btn danger">削除する</button>
+          <button type="button" id="btnCleanupCancel" class="btn">キャンセル</button>
+        </div>
+        <p id="cleanupDone" class="counter" hidden></p>
+      </div>
+    </div>
+  </details>
+  <p id="compatStatus" class="engine sr-only">互換性を確認しています…</p>
+
+  <div class="sysbar">
+    <button type="button" id="btnRelease" class="btn">モデル解放</button>
+    <span class="syshint">GPUメモリを解放します。次回生成時にモデルは自動で再読込されます。</span>
+  </div>
+  <p id="releaseStatus" class="sysmsg" hidden></p>
+</header>
+
+<nav class="sidenav" id="sidenav" aria-label="制作工程">
+  <a href="#cardImages" data-nav>参照画像</a>
+  <a href="#cardIdentity" data-nav>人物・声</a>
+  <a href="#cardSingleText" data-nav data-single>シーンと台詞</a>
+  <a href="#cardSettings" data-nav data-single data-story data-director>生成設定</a>
+  <a href="#cardDirector" data-nav data-director>AI監督</a>
+  <a href="#cardDirectorResult" data-nav data-director>監督案を編集</a>
+  <a href="#cardStoryScript" data-nav data-story>ストーリー台本</a>
+  <a href="#cardStorySegments" data-nav data-story>クリップ構成</a>
+  <a href="#cardResult" data-nav data-single>完成動画</a>
+  <a href="#cardStoryFinal" data-nav data-story>完成動画</a>
+  <a href="#cardAudioTest" data-nav data-audio>音声テスト</a>
+  <a href="#cardAudioTestList" data-nav data-audio>履歴</a>
+</nav>
+
+<main id="studioMain">
+  <section class="studio-intro" aria-label="制作ワークスペース">
+    <div class="studio-heading">
+      <span class="eyebrow">H3 / PERSONAL FILM LAB</span>
+      <h2>その一言に、<br><span>シーンを。</span></h2>
+      <p>イメージを置く。演出を決める。声を確かめる。<br>あなたのPCから、次のワンシーンへ。</p>
+      <div class="studio-links">
+        <button type="button" class="btn" id="studioGoDirector">監督で組み立てる <span aria-hidden="true">↗</span></button>
+        <button type="button" class="btn" id="studioGoVoice">声を整える <span aria-hidden="true">↗</span></button>
+      </div>
+    </div>
+    <div class="scene-monitor" aria-label="参照画像のプレビュー">
+      <div class="monitor-top"><span>SCENE / SOURCE</span><span id="studioSourceCount">NO SOURCE</span></div>
+      <img id="studioReference" alt="選択した参照画像" hidden>
+      <div class="monitor-empty" id="studioEmpty"><span class="reticle" aria-hidden="true"></span><span>YOUR NEXT SCENE</span><small>参照画像を追加して制作を始める</small></div>
+      <div class="monitor-bottom"><span id="studioFormat">PORTRAIT</span><span>LOCAL GENERATION</span></div>
+    </div>
+  </section>
+
+  <!-- (0) モード切り替え -->
+  <div class="modeswitch" id="modeSwitch">
+    <button type="button" id="btnModeSingle" class="modebtn on">単発生成</button>
+    <button type="button" id="btnModeStory" class="modebtn">ストーリーモード</button>
+    <button type="button" id="btnModeDirector" class="modebtn">AI Director</button>
+    <button type="button" id="btnModeAudio" class="modebtn">音声テスト</button>
+    <span class="modehint" id="modeHint">1本だけ作るモードです。</span>
+  </div>
+
+  <!-- (1) 参照画像（両モード共通） -->
+  <section class="card" id="cardImages">
+    <h2><span class="num">1</span>参照画像</h2>
+    <p class="hint">顔がはっきり写った画像ほど人物が似ます。1枚でも生成できます。ストーリーモードでも同じ画像を使います。</p>
+
+    <div id="dropzone" class="dropzone">
+      <p>ここに画像をドラッグ＆ドロップ</p>
+      <button type="button" id="btnAddImage" class="btn">画像を追加</button>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    </div>
+
+    <div id="slots" class="slots"></div>
+    <p id="imageWarning" class="warn">画像を1枚以上追加すると生成できます。</p>
+  </section>
+
+  <!-- (1b) Character / Voice 状態（自動管理の表示のみ） -->
+  <section class="card" id="cardIdentity">
+    <h2><span class="num">2</span>人物・声</h2>
+    <div class="row">
+      <span class="lbl">Character</span>
+      <select id="characterSelect" aria-label="保存済みキャラクター"></select>
+      <button type="button" id="btnCharacterApplyView" class="btn">使用</button>
+    </div>
+    <div class="metarows" id="identityRows"></div>
+    <p class="hint">人物プロフィールと声の固定は生成時に自動処理されます。生成した動画は「生成動画フォルダ」に保存されます。</p>
+    <details class="sub-details" id="characterLibDetails">
+      <summary>Character Libraryを開く</summary>
+      <div class="actions">
+        <button type="button" id="btnCharacterSave" class="btn">現在の人物を新規保存</button>
+        <button type="button" id="btnCharacterRefresh" class="btn">一覧を更新</button>
+      </div>
+      <div id="characterList" class="charlist"></div>
+      <div id="characterEditor" class="charedit" hidden>
+        <h3 id="charEditTitle">キャラクター編集</h3>
+        <label class="lbl" for="charName">名前</label>
+        <input type="text" id="charName" maxlength="60">
+        <label class="lbl" for="charMemo">メモ</label>
+        <textarea id="charMemo" rows="2"></textarea>
+        <label class="lbl" for="charProfile">プロフィール（空なら現在の生成情報を使用）</label>
+        <textarea id="charProfile" rows="4"></textarea>
+        <div class="actions">
+          <button type="button" id="btnCharacterDoSave" class="btn primary">保存</button>
+          <button type="button" id="btnCharacterCancel" class="btn">キャンセル</button>
+        </div>
+      </div>
+      <div id="characterDetail" class="chardetail" hidden></div>
+    </details>
+  </section>
+
+  <!-- (2) 日本語の指示（単発生成） -->
+  <section class="card mode-single" id="cardSingleText">
+    <h2><span class="num">3</span>シーンと台詞</h2>
+    <label class="lbl" for="jpScene">どんな動画にしますか</label>
+    <textarea id="jpScene" rows="5" placeholder="例）笑顔で少し首をかしげる&#10;例）カメラ目線で自然に話す&#10;例）落ち着いた雰囲気で"></textarea>
+
+    <label class="lbl" for="jpDialogue">セリフ（1行1発話・空欄は無言）</label>
+    <textarea id="jpDialogue" rows="4" placeholder="例）はい、ということでこんにちは！&#10;例）今日はこのカフェに来ました。"></textarea>
+
+    <details class="sub-details">
+      <summary>避けたい要素を指定する</summary>
+      <textarea id="jpNegative" rows="4" placeholder="空欄なら推奨の設定を使います"></textarea>
+    </details>
+  </section>
+
+  <!-- (3) 生成設定（両モード共通） -->
+  <section class="card" id="cardSettings">
+    <h2><span class="num">4</span>生成設定</h2>
+
+    <div class="row">
+      <span class="lbl">生成モード</span>
+      <div class="choices" id="genModes"></div>
+    </div>
+    <p class="hint" id="modeDesc"></p>
+    <label class="lbl" for="speechDelivery">話し方</label>
+    <select id="speechDelivery">
+      <option value="natural">自然な会話</option><option value="warm">やさしく、親しみを込めて</option>
+      <option value="calm">落ち着いて、間を取る</option><option value="bright">明るく、軽やかに</option>
+    </select>
+    <p class="hint">演技指示として反映します。実際の抑揚は生成後に試聴してください。</p>
+    <details class="sub-details">
+      <summary>Advanced / Experimental</summary>
+      <div class="choices" id="genModesAdv"></div>
+      <div class="choices" id="genModesExp"></div>
+      <p class="hint" id="expNote"></p>
+    </details>
+
+    <div class="row" id="secondsRow">
+      <span class="lbl">出力時間</span>
+      <div class="choices" id="secondsChoices"></div>
+    </div>
+    <p class="hint mode-director" id="directorSecondsHint">Directorモードでは、この「出力時間」は使いません。AI Directorで選んだ動画尺がそのまま使われます。</p>
+
+    <div class="row">
+      <span class="lbl">画面比</span>
+      <div class="choices" id="aspectChoices"></div>
+    </div>
+
+    <p class="hint mode-story" id="storySecondsHint">ストーリーモードでは、この「出力時間」が1セグメントの長さになります。</p>
+
+    <button type="button" id="btnGenerate" class="btn primary big" disabled>生成</button>
+    <p class="hint" id="genHint">既定の設定で 1本あたり およそ 3分40秒 かかります。</p>
+  </section>
+
+  <!-- (S1) ストーリー: 台本 -->
+  <section class="card mode-story" id="cardStoryScript" hidden>
+    <h2><span class="num">S1</span>台本</h2>
+
+    <label class="lbl" for="storyName">プロジェクト名</label>
+    <input type="text" id="storyName" placeholder="例）自己紹介動画">
+
+    <details class="sub-details" id="storyLongDetails">
+      <summary>長文から自動で作る</summary>
+      <p class="hint">長い文章をそのまま貼り付けて、下のボタンを押すと、台本と場面（セグメント）に自動で分けます。『』で囲んだ部分はセリフになります。</p>
+      <p class="hint">自動で種類を判定するのは、ここに入れた「種類を指定していない文章」だけです。下の台本で Prompt / Speech を指定した部分は、その指定がそのまま使われます（あとから勝手に種類が変わることはありません）。</p>
+      <textarea id="storyLongText" rows="6" placeholder="例）はじめまして、私はH3モデルです。よろしくお願いします。と笑顔で自己紹介する、深くお辞儀する。その後、部屋の紹介を始める『普段はこの椅子に座って配信してます。』と話しながら椅子に座る。"></textarea>
+      <button type="button" id="btnStoryFromText" class="btn primary">長文から自動で作る</button>
+    </details>
+
+    <span class="lbl">台本（そのまま書けます。色は種類の目印です）</span>
+    <div class="linemodebar">
+      <span class="lbl">入力の種類</span>
+      <button type="button" id="btnLineModePrompt" class="choice on">Prompt</button>
+      <button type="button" id="btnLineModeSpeech" class="choice">Speech</button>
+      <span class="curmode" id="lineModeLabel">現在：Prompt</span>
+      <span class="hint">Prompt＝動きや場面の指示（通常の色） ／ Speech＝実際にしゃべるセリフ（青色）。文字を選んでから押すとその部分の種類が変わります。何も選ばずに押すと、これから入力する文字の種類が変わります。</span>
+    </div>
+
+    <div id="scriptEditor" class="scripted" contenteditable="true" role="textbox"
+         aria-multiline="true" aria-label="台本"
+         data-placeholder="ここに台本を書きます。例）カメラ正面で笑顔になる。"></div>
+    <p class="hint" id="scriptStats">Prompt 0行 ／ Speech 0行</p>
+
+    <div class="actions">
+      <button type="button" id="btnAddLine" class="btn">行を追加</button>
+      <button type="button" id="btnClearLines" class="btn">行をすべて消す</button>
+    </div>
+    <p class="hint">Enterで改行します。貼り付けた文章は、いまの種類のまま入ります（改行もそのまま残ります）。右クリックのコピー・貼り付けはいつも通り使えます。セリフを空にしたセグメントは「発話なし（しゃべらない）」になります。</p>
+  </section>
+
+  <!-- (S2) ストーリー: 動きのプリセットと避けたい要素 -->
+  <section class="card mode-story" id="cardStoryOptions" hidden>
+    <h2><span class="num">S2</span>雰囲気のプリセット（全セグメント共通）</h2>
+    <div class="choices" id="motionChips"></div>
+    <p class="hint">ここで選んだ雰囲気は<strong>すべてのセグメント</strong>に付きます。「手を振る」などの1回だけの動作は、下のセグメントごとのカードで選んでください（そのセグメントにだけ付きます）。何も選ばなくても生成できます。</p>
+
+    <details class="sub-details">
+      <summary>避けたい要素を指定する（ストーリー全体で共通）</summary>
+      <textarea id="storyNegative" rows="4" placeholder="空欄なら推奨の設定を使います"></textarea>
+    </details>
+  </section>
+
+  <!-- (S3) ストーリー: セグメント -->
+  <section class="card mode-story" id="cardStorySegments" hidden>
+    <h2><span class="num">S3</span>セグメント</h2>
+    <p class="hint">生成する前に、分け方と文章を確認・修正できます。</p>
+    <div class="actions">
+      <button type="button" id="btnStoryResplit" class="btn">分割し直す</button>
+      <button type="button" id="btnStorySaveSegments" class="btn" disabled>セグメントを保存</button>
+      <button type="button" id="btnSegmentAdd" class="btn">＋ セグメント追加</button>
+    </div>
+    <p class="hint">「＋ セグメント追加」は一番うしろに追加します。カードとカードのあいだの「＋」を押すと、その位置に追加します。各カードの「↑」「↓」で順番を入れかえ、「削除」でそのセグメントを消せます。</p>
+    <p id="storySegmentSummary" class="hint">まだセグメントがありません。</p>
+    <p id="storySegmentNote" class="warn" hidden></p>
+    <div id="segmentList" class="segments"></div>
+  </section>
+
+  <!-- (S4) ストーリー: 実行と進捗 -->
+  <section class="card mode-story" id="cardStoryRun" hidden>
+    <h2><span class="num">S4</span>ストーリーの実行</h2>
+
+    <div class="actions">
+      <button type="button" id="btnStoryPreflight" class="btn">生成前の内容チェック</button>
+    </div>
+    <p class="hint">押すと、いまの台本を保存して「何が生成されるか」をセグメントごとに一覧します。生成はまだ始まりません。</p>
+    <div id="preflightPanel" class="preflight" hidden>
+      <p id="preflightMessage" class="preflightmsg"></p>
+      <div id="preflightList"></div>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="btnStoryStart" class="btn primary" disabled>ストーリー開始</button>
+      <button type="button" id="btnStoryStop" class="btn" disabled>一時保存して停止</button>
+      <button type="button" id="btnStoryDiscard" class="btn danger" disabled>破棄</button>
+      <button type="button" id="btnStoryMerge" class="btn" disabled>完成動画を書き出し</button>
+    </div>
+    <p class="warn" id="storyStartWhy" hidden></p>
+    <p class="hint">「一時保存して停止」を押すと、いま作っているクリップが最後まで終わってから停止します。ここまでの結果は自動で保存されます。</p>
+
+    <div class="statuspanel">
+      <div class="statusrow"><span class="k">プロジェクト名</span><span class="v" id="storyPanelName">-</span></div>
+      <div class="statusrow"><span class="k">状態</span><span class="v" id="storyPanelStatus">待機</span></div>
+      <div class="statusrow"><span class="k">全体進捗</span><span class="v" id="storyPanelProgress">0 / 0</span></div>
+      <div class="progress"><div id="storyProgressBar" class="bar"></div></div>
+      <div class="statusrow"><span class="k">今のセグメント</span><span class="v" id="storyPanelCurrent">-</span></div>
+      <p class="segline" id="storyPanelPrompt"></p>
+      <p class="segline speech" id="storyPanelSpeech"></p>
+      <p class="warn" id="storyInvalidNote" hidden></p>
+    </div>
+    <p class="hint">1クリップごとの細かい進み具合は、下の「実行状態」に出ます。</p>
+  </section>
+
+  <!-- (4) 詳細設定（両モード共通） -->
+  <section class="card" id="cardAdvanced">
+    <details id="advanced">
+      <summary>詳細設定を開く</summary>
+      <p class="hint">★推奨 と書かれた値が、実測で検証済みの設定です。</p>
+
+      <div class="grid">
+        <label>seed <input type="number" id="advSeed" value="123456789"></label>
+        <label class="check"><input type="checkbox" id="advRandomSeed"> 毎回ランダム</label>
+        <label>steps ★推奨 8 <input type="number" id="advSteps" value="8" min="1" max="60"></label>
+        <label>sampler ★推奨 res_multistep <select id="advSampler"></select></label>
+        <label>scheduler ★推奨 simple <select id="advScheduler"></select></label>
+        <label>参照画像サイズ ★推奨 match <select id="advRefSize"></select></label>
+        <label>出力解像度 幅 ★推奨 576 <input type="number" id="advWidth" step="32" value="576"></label>
+        <label>出力解像度 高さ ★推奨 1024 <input type="number" id="advHeight" step="32" value="1024"></label>
+        <label>フレーム数 <select id="advFramesMode">
+            <option value="auto">自動（出力時間から計算）</option>
+            <option value="manual">手動</option>
+          </select></label>
+        <label>フレーム数（手動） <input type="number" id="advFrames" value="124"></label>
+        <label class="wide" title="MP4は「生成動画フォルダ」（設定 &gt; 保存先）へ書き出されます。この値はComfyUI内部の出力名にのみ使われます。">ComfyUI内部の出力名（prefix） <input type="text" id="advPrefix" placeholder="H3/APP"></label>
+      </div>
+
+      <button type="button" id="btnResetAdvanced" class="btn">既定値に戻す</button>
+    </details>
+  </section>
+
+  <!-- (5) 実行状態（両モード共通） -->
+  <section class="card" id="cardStatus" hidden>
+    <h2><span class="num">4</span>実行状態</h2>
+    <ol id="stageList" class="stages"></ol>
+
+    <div class="progress"><div id="progressBar" class="bar"></div></div>
+    <p class="meta"><span id="elapsed">経過 0秒</span><span id="etaText"></span></p>
+
+    <button type="button" id="btnCancel" class="btn danger">中止</button>
+
+    <div id="errorCard" class="errorcard" hidden>
+      <h3 id="errTitle"></h3>
+      <p id="errWhere"></p>
+      <p id="errRetry"></p>
+      <p id="errConfig"></p>
+      <button type="button" id="btnRetry" class="btn primary" hidden>再試行</button>
+      <button type="button" id="btnStoryResume" class="btn primary" hidden>再開</button>
+      <details class="sub-details">
+        <summary>詳細</summary>
+        <pre id="errDetail"></pre>
+      </details>
+    </div>
+  </section>
+
+  <!-- (6) 完成（単発生成） -->
+  <section class="card mode-single" id="cardResult" hidden>
+    <h2><span class="num">5</span>完成</h2>
+    <video id="player" controls preload="metadata" playsinline></video>
+    <p id="lengthCounter" class="counter"></p>
+    <div id="resultRows" class="metarows"></div>
+    <details class="sub-details" id="resultDetail">
+      <summary>Details</summary>
+      <p id="resultPath" class="counter dim"></p>
+    </details>
+    <p id="resultMeta" class="counter" hidden></p>
+    <p id="resultExportStatus" class="counter" hidden></p>
+    <p id="resultWarning" class="warn" hidden></p>
+
+    <div class="actions">
+      <button type="button" id="btnPlay" class="btn">▶ 再生</button>
+      <button type="button" id="btnOpenFolder" class="btn">📁 保存した動画を表示</button>
+      <button type="button" id="btnAgain" class="btn">同じ設定でもう1本</button>
+      <button type="button" id="btnContinue" class="btn primary">↻ この動画の続きを作る</button>
+      <!-- WP-B: standard/AI upscale of the just-finished clip -->
+      <button type="button" id="btnUpscaleResult" class="btn">🔼 高画質化</button>
+    </div>
+    <div class="upscale-panel" id="upscalePanelResult" hidden></div>
+  </section>
+
+  <!-- (S5) ストーリー: 完成動画 -->
+  <section class="card mode-story" id="cardStoryFinal" hidden>
+    <h2><span class="num">S5</span>完成動画</h2>
+    <video id="storyPlayer" controls preload="metadata" playsinline></video>
+    <p id="storyFinalPath" class="counter"></p>
+    <!-- WP-C: per-boundary seam summary from /api/story/merge (seams.report) -->
+    <div id="storySeams" class="counter" hidden></div>
+    <div class="actions">
+      <button type="button" id="btnStoryPlay" class="btn">再生</button>
+      <button type="button" id="btnStoryOpenFolder" class="btn">保存フォルダを開く</button>
+      <button type="button" id="btnStoryRevealFile" class="btn">ファイルの場所を開く</button>
+      <!-- WP-B: standard/AI upscale of the finished story video -->
+      <button type="button" id="btnUpscaleStory" class="btn">🔼 高画質化</button>
+    </div>
+    <div class="upscale-panel" id="upscalePanelStory" hidden></div>
+  </section>
+
+  <!-- (S6) ストーリー: 保存済みプロジェクト -->
+  <section class="card mode-story" id="cardStoryList" hidden>
+    <h2><span class="num">S6</span>保存済みプロジェクト</h2>
+    <div class="actions">
+      <button type="button" id="btnStoryRefreshList" class="btn">一覧を更新</button>
+    </div>
+    <div id="storyList" class="storylist"></div>
+  </section>
+
+  <!-- (D1) AI Director: 入力 -->
+  <section class="card mode-director" id="cardDirector" hidden>
+    <h2><span class="num">D</span>AI Director</h2>
+    <p class="hint">動画のアイデアを書くと、AIが監督案を作ります。Promptを書く必要はありません。</p>
+    <label class="lbl" for="directorIdea">キーワード / アイデア</label>
+    <textarea id="directorIdea" rows="3" placeholder="例）夜の夏祭りで恋人を撮影"></textarea>
+    <div class="row">
+      <span class="lbl">動画尺</span>
+      <div class="choices" id="directorDurations"></div>
+    </div>
+    <label class="lbl" for="directorRequest">初回要望（任意・監督への注文）</label>
+    <textarea id="directorRequest" rows="3" placeholder="例）会話多め、カメラは激しく動かさない"></textarea>
+    <div class="row">
+      <span class="lbl">Character</span>
+      <select id="directorCharacter" aria-label="保存済みキャラクター"></select>
+    </div>
+    <div class="row">
+      <span class="lbl">今回だけ使用するモデル</span>
+      <select id="directorTempModel" aria-label="今回だけ使用するモデル"></select>
+    </div>
+    <p class="hint">空欄のままなら設定画面の既定モデルを使います。ここでの変更は保存されません。</p>
+    <div class="actions">
+      <button type="button" id="btnDirectorCreate" class="btn primary big">ディレクション生成</button>
+    </div>
+    <p class="hint">参照画像は上の「参照画像」で設定します（生成時に使用）。</p>
+  </section>
+
+  <!-- (D2) AI Director: 監督案 -->
+  <section class="card mode-director" id="cardDirectorResult" hidden>
+    <h2><span class="num">D</span>監督案</h2>
+    <p class="hint" id="directorUsed"></p>
+    <div id="directorWarnings"></div>
+    <div id="directorItems"></div>
+    <details class="direction-review"><summary>生成前に台詞とショットを点検</summary>
+      <button type="button" class="btn" id="btnDirectionReview">現在の監督案をチェック</button>
+      <div id="directionReview" aria-live="polite"></div>
+    </details>
+    <label class="lbl" for="directorGlobal">全体要望（任意・全体へ反映）</label>
+    <textarea id="directorGlobal" rows="2" placeholder="例）全体的にもっと日常感を出して"></textarea>
+    <div class="actions">
+      <button type="button" id="btnDirectorRegen" class="btn primary">要望を反映して再ディレクション</button>
+      <button type="button" id="btnDirectorGenerate" class="btn primary">この内容で動画生成</button>
+    </div>
+    <p class="hint" id="directorEnforced"></p>
+  </section>
+
+  <!-- (A1) 音声テスト -->
+  <section class="card mode-audio" id="cardAudioTest" hidden>
+    <h2><span class="num">A</span>音声テスト</h2>
+    <p class="hint">入力した台詞をH3に話させて、発音だけを確認します。動画（mp4）は作られません。</p>
+
+    <label class="lbl" for="audioTestText">台詞</label>
+    <textarea id="audioTestText" rows="3" placeholder="例: 今日は楽しいね。"></textarea>
+
+    <label class="lbl" for="audioTestSpoken">発音用テキスト（任意）</label>
+    <p class="hint">読み方を調整したいときだけ入力します。空欄なら上の台詞をそのまま話します。</p>
+    <textarea id="audioTestSpoken" rows="2" placeholder="例: きょうは たのしいね。"></textarea>
+
+    <div class="row">
+      <span class="lbl">言語</span>
+      <div class="choices" id="audioTestLang">
+        <button type="button" class="choice on" data-lang="Japanese">日本語</button>
+        <button type="button" class="choice" data-lang="English">English</button>
+      </div>
+    </div>
+
+    <label class="check"><input type="checkbox" id="audioTestVoiceMaster"> Voice Masterを使う（Characterに登録した声）</label>
+    <p class="hint" id="audioTestVoiceMasterHint">声が登録されたCharacterを適用すると使えます。</p>
+
+    <label class="lbl" for="audioTestNotes">メモ（任意）</label>
+    <input type="text" id="audioTestNotes">
+
+    <div class="actions">
+      <div>
+        <button type="button" id="btnAudioTestQuick" class="btn primary">クイック音声テスト</button>
+        <p class="hint">約2秒の短い発音確認。最終動画と完全に同一条件ではありません。</p>
+      </div>
+      <div>
+        <button type="button" id="btnAudioTestFull" class="btn primary">本番条件で確認</button>
+        <p class="hint">時間はかかりますが、本番動画に近い条件で確認します。</p>
+      </div>
+    </div>
+    <p class="warn" id="audioTestWhy" hidden></p>
+    <p class="hint" id="audioTestStatus"></p>
+  </section>
+
+  <!-- (A2) 音声テスト履歴 -->
+  <section class="card mode-audio" id="cardAudioTestList" hidden>
+    <h2><span class="num">A</span>音声テスト履歴</h2>
+    <div id="audioTestList" class="audiotestlist"></div>
+    <p class="hint" id="audioTestListEmpty" hidden>まだ音声テストはありません。</p>
+    <div class="actions">
+      <button type="button" id="btnAudioTestDeleteAll" class="btn danger">音声テストをすべて削除</button>
+    </div>
+  </section>
+
+  <section class="card mode-audio" id="cardRehearsal" hidden>
+    <div class="section-kicker">VOICE DESK / OPTIONAL</div>
+    <h2>読みとアクセントのリハーサル</h2>
+    <p class="hint">ローカルのVOICEVOXで、話速とアクセントを試聴できます。H3の生成音声とは別の試聴です。調整値はH3へ自動適用されません。</p>
+    <div class="actions"><button type="button" class="btn" id="btnVoiceConnect">VOICEVOXに接続</button>
+      <select id="voiceSpeaker" aria-label="リハーサルの話者"><option value="">接続後に話者を選択</option></select></div>
+    <label class="lbl" for="rehearsalText">読み上げる台詞</label>
+    <textarea id="rehearsalText" rows="3" maxlength="2000" placeholder="固有名詞は、かなで読み方を試せます。"></textarea>
+    <div class="actions"><button type="button" class="btn" id="btnVoiceCopy">音声テストの台詞を取り込む</button>
+      <button type="button" class="btn primary" id="btnVoiceAnalyze">読みを解析</button></div>
+    <div id="voiceAccents" class="voice-accents"></div>
+    <div class="voice-controls">
+      <label>話速 <input id="voiceSpeed" type="range" min="0.5" max="2" step="0.05" value="1"><output id="voiceSpeedValue">1.00</output></label>
+      <label>抑揚 <input id="voiceIntonation" type="range" min="0" max="2" step="0.05" value="1"><output id="voiceIntonationValue">1.00</output></label>
+    </div>
+    <div class="actions"><button type="button" class="btn primary" id="btnVoicePlay" disabled>このアクセントで試聴</button>
+      <button type="button" class="btn" id="btnVoiceUseReading">読みの文字列をH3音声テストへ</button></div>
+    <audio id="voicePreviewPlayer" controls hidden></audio>
+    <p id="voiceRehearsalStatus" class="hint" role="status"></p>
+  </section>
+
+</main>
+
+<div id="actionbar" class="actionbar" hidden>
+  <span id="actionState" class="actionstate">待機中</span>
+  <div class="progress mini"><div id="actionBar" class="bar"></div></div>
+  <button type="button" id="btnNowGo" class="btn primary">GENERATE VIDEO</button>
+  <button type="button" id="btnNowCancel" class="btn danger" hidden>CANCEL</button>
+</div>
+
+<!-- 動作プリセットの追加（確定ボタンは「保存」） -->
+<dialog id="actionPresetDialog" class="modal">
+  <h3>動作を追加</h3>
+  <p class="hint">動作の名前だけを入れてください（例: ピースサイン）。<br>
+    追加した動作は、セグメントのカードのボタンとして並びます。押すと、その場面の指示に文章が書き足されます。</p>
+  <label class="lbl" for="actionPresetName">動作の名前</label>
+  <input id="actionPresetName" type="text" maxlength="40" placeholder="例: ピースサイン">
+  <p id="actionPresetError" class="warn" hidden></p>
+  <div class="actions">
+    <button type="button" id="btnActionPresetCancel" class="btn">キャンセル</button>
+    <button type="button" id="btnActionPresetSave" class="btn primary">保存</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- 設定モーダル（保存先 / GPU / LLM接続） -->
+<dialog id="settingsDialog" class="modal wide settings">
+  <h3>設定</h3>
+  <div class="tabs" role="tablist" aria-label="設定タブ">
+    <button type="button" id="tabBtnStorage" class="tab-btn on" role="tab" aria-selected="true" aria-controls="tabStorage" data-tab="storage">保存先</button>
+    <button type="button" id="tabBtnGpu" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabGpu" data-tab="gpu">GPU</button>
+    <button type="button" id="tabBtnLlm" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabLlm" data-tab="llm">LLM接続</button>
+  </div>
+
+  <!-- 保存先タブ -->
+  <div id="tabStorage" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnStorage">
+    <p class="hint">生成した動画や参照画像がどこに保存されるかを表示します。この画面では変更しません（config.json の media_root）。</p>
+    <p class="warn" id="storageProcessNote" hidden></p>
+
+    <div class="settings-block">
+      <h4>生成動画フォルダ</h4>
+      <p class="hint" id="storageVideosPath">-</p>
+      <div class="actions">
+        <button type="button" class="btn" data-open-target="videos">📁 生成動画フォルダを開く</button>
+        <button type="button" class="btn" data-open-target="finals">📁 完成動画を開く</button>
+        <button type="button" class="btn" data-open-target="clips">📁 クリップを開く</button>
+      </div>
+      <p class="hint" id="storageFinalsPath"></p>
+      <p class="hint" id="storageClipsPath"></p>
+    </div>
+
+    <div class="settings-block">
+      <h4>H3_Mediaフォルダ</h4>
+      <p class="hint" id="storageRootPath">-</p>
+      <div class="actions">
+        <button type="button" class="btn" data-open-target="root">📁 H3_Mediaフォルダを開く</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h4>ComfyUI受け渡し用フォルダ</h4>
+      <p class="hint">参照画像はここに取り込み、生成時にComfyUIへ送ります。</p>
+      <p class="hint" id="storageStagePath">-</p>
+    </div>
+    <p class="hint" id="storageMsg"></p>
+  </div>
+
+  <!-- GPUタブ -->
+  <div id="tabGpu" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnGpu" hidden>
+    <p class="hint">動画生成側（DiT・VAE）とテキスト・参照の条件付け（text encoder）に使うGPUを設定します。</p>
+    <div class="actions">
+      <button type="button" id="btnGpuRefresh" class="btn">再検出</button>
+    </div>
+    <div class="table-wrap">
+      <table class="gpu-table" id="gpuTable">
+        <thead><tr><th>名前</th><th>UUID</th><th>PCIバス</th><th>総VRAM</th><th>空きVRAM</th></tr></thead>
+        <tbody id="gpuTableBody"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="gpuRamTotal"></p>
+
+    <div class="row">
+      <span class="lbl">運用</span>
+      <div class="choices" id="gpuModeChoices">
+        <button type="button" class="choice" data-mode="auto">自動</button>
+        <button type="button" class="choice" data-mode="single">シングルGPU</button>
+        <button type="button" class="choice" data-mode="dual">デュアルGPU</button>
+      </div>
+    </div>
+    <div class="row">
+      <span class="lbl">動画生成側（DiT・VAE）</span>
+      <select id="gpuVideoSelect" aria-label="動画生成側GPU"></select>
+    </div>
+    <div class="row">
+      <span class="lbl">別処理側（text encoder）</span>
+      <select id="gpuAuxSelect" aria-label="別処理側GPU"></select>
+    </div>
+    <label class="lbl" for="gpuReserve">予約VRAM（GB, 各GPUごと）</label>
+    <input type="number" id="gpuReserve" min="0" max="4" step="0.1">
+
+    <div id="gpuPlanBox" class="plan-box">
+      <p class="hint" id="gpuPlanRoles"></p>
+      <div id="gpuPlanErrors" class="warn"></div>
+      <div id="gpuPlanWarnings" class="hint"></div>
+    </div>
+
+    <div class="settings-status">
+      <span id="gpuStatusSaved" class="status-chip"></span>
+      <span id="gpuStatusApplied" class="status-chip"></span>
+      <span id="gpuStatusDirty" class="status-chip dirty" hidden>未保存の変更があります</span>
+    </div>
+    <p class="hint" id="gpuAppliedInfo"></p>
+    <p class="warn" id="gpuRestartNotice" hidden></p>
+    <p class="hint" id="gpuBusyNotice" hidden>生成中は変更できません。</p>
+
+    <div class="actions modalfoot">
+      <button type="button" id="btnGpuApply" class="btn" disabled></button>
+      <button type="button" id="btnGpuSave" class="btn primary" disabled>保存</button>
+    </div>
+    <p class="hint" id="gpuSaveMsg"></p>
+  </div>
+
+  <!-- LLM接続タブ（WP-A: 接続種別→プロバイダー→使用モデル→接続情報） -->
+  <div id="tabLlm" class="tab-panel" role="tabpanel" aria-labelledby="tabBtnLlm" hidden>
+    <div class="settings-block">
+      <h4>現在の選択</h4>
+      <p class="hint" id="llmSummary">-</p>
+    </div>
+
+    <div class="settings-block">
+      <h4>接続種別</h4>
+      <div class="row">
+        <div class="choices" id="llmKindChoices"></div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h4>プロバイダー</h4>
+      <div class="row">
+        <div class="choices" id="llmProviderChoices"></div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h4>使用モデル</h4>
+      <div class="row">
+        <select id="llmModelSelect" aria-label="使用モデル"></select>
+        <button type="button" id="btnLlmManualToggle" class="btn" title="手入力との切り替え">手入力</button>
+      </div>
+      <input type="text" id="llmModelManual" placeholder="モデルIDを入力" hidden>
+      <p class="hint">画像入力: <span id="llmMainVisionState">未確認</span></p>
+      <label class="check" id="llmMainVisionManualRow" hidden>
+        <input type="checkbox" id="llmMainVisionManual"> このモデルは画像入力に対応している（手動確認）
+      </label>
+      <div class="actions">
+        <button type="button" id="btnLlmModels" class="btn">モデル一覧を取得</button>
+        <button type="button" id="btnLlmTest" class="btn primary">接続テスト</button>
+      </div>
+      <p class="hint" id="llmTestResult"></p>
+    </div>
+
+    <div class="settings-block" id="llmConnBlock">
+      <h4>接続情報</h4>
+      <p class="hint" id="llmGemmaInfo" hidden>-</p>
+      <div id="llmUrlRow">
+        <label class="lbl" for="llmBaseUrl">サーバーURL</label>
+        <input type="text" id="llmBaseUrl" placeholder="">
+      </div>
+      <div id="llmKeyRow">
+        <label class="lbl" for="llmApiKey">API Key</label>
+        <input type="password" id="llmApiKey" autocomplete="off" placeholder="未設定">
+        <div class="actions">
+          <button type="button" id="btnLlmKeyShow" class="btn">表示</button>
+          <button type="button" id="btnLlmKeySave" class="btn">API Keyを保存</button>
+          <button type="button" id="btnLlmKeyDelete" class="btn danger">API Keyを削除</button>
+        </div>
+      </div>
+      <p class="hint" id="llmConnMsg"></p>
+    </div>
+
+    <div class="settings-block">
+      <label class="check"><input type="checkbox" id="aiProfileOverride"> 人物解析だけ別のモデルを使う</label>
+      <div id="llmProfileOverrideBlock" hidden>
+        <div class="row">
+          <span class="lbl">処理先</span>
+          <div class="choices" id="llmProfileProvider"></div>
+        </div>
+        <div class="row">
+          <span class="lbl">使用モデル</span>
+          <select id="llmProfileModelSelect" aria-label="人物解析の使用モデル"></select>
+          <button type="button" id="btnLlmProfileManualToggle" class="btn" title="手入力との切り替え">手入力</button>
+        </div>
+        <input type="text" id="llmProfileModelManual" placeholder="モデルIDを入力" hidden>
+        <p class="hint">画像入力: <span id="llmProfileVisionState">未確認</span></p>
+        <label class="check" id="llmProfileVisionManualRow" hidden>
+          <input type="checkbox" id="llmProfileVisionManual"> このモデルは画像入力に対応している（手動確認）
+        </label>
+        <p class="hint">画像非対応のモデルには画像を送信しません。</p>
+        <div class="actions">
+          <button type="button" id="btnLlmProfileModels" class="btn">モデル一覧を取得</button>
+          <button type="button" id="btnAiProfileTest" class="btn">このモデルをテスト（画像入力含む）</button>
+        </div>
+        <p class="hint" id="aiProfileTestMsg"></p>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <label class="check"><input type="checkbox" id="aiGemmaFallback" checked> 失敗した場合はComfyUI内Gemmaで続行する</label>
+      <p class="hint">ローカル接続の失敗時に外部APIへは送信しません。認証失敗時は切り替えず停止します。試行は最大3回までです。</p>
+    </div>
+
+    <!-- WP-D: startup/shutdown subsection (appended at the end of tabLlm). -->
+    <div class="settings-block">
+      <h4>起動と終了</h4>
+      <label class="check"><input type="checkbox" id="shutdownStopLmStudio" checked> H3終了時にLM Studioを終了する</label>
+      <p class="hint" id="shutdownPreMsg" hidden>H3の起動前から動いていたLM Studioも終了対象になります。</p>
+      <div class="actions">
+        <button type="button" id="btnShutdownSettingSave" class="btn">終了設定を保存</button>
+      </div>
+      <p class="hint" id="shutdownSettingMsg"></p>
+    </div>
+
+    <div class="settings-status">
+      <span id="llmStatusSaved" class="status-chip"></span>
+      <span id="llmStatusDirty" class="status-chip dirty" hidden>未保存の変更があります</span>
+    </div>
+    <div class="actions modalfoot">
+      <button type="button" id="btnAiSettingsSave" class="btn primary">保存</button>
+    </div>
+    <p class="hint" id="aiSettingsMsg"></p>
+  </div>
+
+  <div class="actions modalfoot">
+    <!-- WP-D: same shutdown action as the header button. -->
+    <button type="button" id="btnShutdown2" class="btn danger">H3を終了</button>
+    <button type="button" id="btnAiSettingsClose" class="btn">閉じる</button>
+  </div>
+</dialog>
+
+<!-- WP-D: safe shutdown confirm/result dialog. -->
+<dialog id="shutdownDialog" class="modal">
+  <h3>H3を終了しますか？</h3>
+  <p class="hint">タブを閉じただけでは H3 は終了しません。終了はこのボタンから行ってください。再起動は RUN_H3.bat です。</p>
+  <div id="shutdownResult" class="sysmsg" hidden></div>
+  <div id="shutdownSteps" class="cleanuplist" hidden></div>
+  <div class="actions">
+    <button type="button" id="btnShutdownForce" class="btn danger" hidden>中止して終了</button>
+    <button type="button" id="btnShutdownDo" class="btn danger">終了する</button>
+    <button type="button" id="btnShutdownCancel" class="btn">キャンセル</button>
+  </div>
+</dialog>
+
+<script src="/static/app.js"></script>
+<script src="/static/studio.js"></script>
+<script src="/static/settings.js"></script>
+</body>
+</html>

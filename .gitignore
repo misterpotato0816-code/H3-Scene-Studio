@@ -1,0 +1,131 @@
+# ---------------------------------------------------------------------------
+# Secrets and machine-local configuration
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.jks
+id_rsa*
+id_ed25519*
+credentials.json
+secrets.json
+
+/app/config.json
+/app/comfy_paths.yaml
+/app/action_presets.json
+/app/_runtime/
+/backend/h3_v2/config.json
+/backend/h3_v2/paths_rnd.yaml
+/_hetero_test/hetero_paths.yaml
+
+# Local agent state is not project source.
+/.brain/
+
+# ---------------------------------------------------------------------------
+# User media, project state, debug captures, and generated output
+# ---------------------------------------------------------------------------
+/H3_Media/
+/app/projects/
+/app/story_projects/
+/app/character_library/
+/app/audio_tests/
+/app/_debug/
+/app/_comfy_input/
+/benchmarks/
+/docs/optimization_2026-09-07/
+/_archive/
+/_backup/
+
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.aac
+*.srt
+*.vtt
+
+# Model/checkpoint formats. Models belong in the external ComfyUI model store.
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.gguf
+*.onnx
+*.engine
+
+# Runtime state and diagnostics.
+*.log
+*.err
+*.jsonl
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.pid
+*.lock
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.zip
+*.7z
+*.rar
+
+# Compiled/generated launch artifacts.
+*.exe
+*.lnk
+/Claude無料避難.cmd
+
+# ---------------------------------------------------------------------------
+# Python, JavaScript, IDE, and OS caches
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+node_modules/
+dist/
+
+.vscode/
+.idea/
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------------------------
+# Heterogeneous-GPU experiment source is kept; heavy run artifacts are not.
+# ---------------------------------------------------------------------------
+/_hetero_test/gold/*
+!/_hetero_test/gold/gold_final_prompt.txt
+
+/_hetero_test/final_gpu1_e2e/*
+!/_hetero_test/final_gpu1_e2e/final_prompt.json
+!/_hetero_test/final_gpu1_e2e/run_final_gpu1_e2e.py
+!/_hetero_test/final_gpu1_e2e/run_final_gpu1_e2e_inner.ps1
+
+/_hetero_test/opt_ref_match/*
+!/_hetero_test/opt_ref_match/candidate_prompt.json
+!/_hetero_test/opt_ref_match/run_opt_ref_match.py
+!/_hetero_test/opt_ref_match/run_opt_ref_match_inner.ps1
+!/_hetero_test/opt_ref_match/make_compare_sheet.py

@@ -1,0 +1,97 @@
+{
+  "comfy_dir": "D:\\ComfyUI\\ComfyUI",
+  "comfy_python": "",
+  "comfy_port": 8411,
+  "app_port": 8790,
+  "auto_launch_comfy": true,
+  "comfy_launch_args": [
+    "--default-device",
+    "0",
+    "--reserve-vram",
+    "1.0"
+  ],
+  "comfy_launch_args_fast": [],
+  "media_root": "D:\\H3_Media",
+  "whitelist_custom_nodes": [],
+  "output_prefix": "H3/APP",
+  "idle_timeout_seconds": 90,
+  "stop_comfy_when_idle": true,
+  "story": {
+    "seconds_per_segment": 10,
+    "max_segments": 24
+  },
+  "vlm": {
+    "model": "gemma-4-E4B-it-ultra-uncensored-heretic-Q8_0.gguf",
+    "mmproj": "gemma-4-E4B-it-mmproj-BF16.gguf",
+    "chat_handler": "Gemma4",
+    "n_ctx": 16384
+  },
+  "defaults": {
+    "width": 576,
+    "height": 1024,
+    "frames": 124,
+    "steps": 8,
+    "seed": 123456789,
+    "randomize_seed": false,
+    "sampler": "res_multistep",
+    "scheduler": "simple",
+    "ref_image_size": "match",
+    "fps": 24,
+    "seconds": 5,
+    "max_seconds": 15,
+    "tail_frames": 56,
+    "ref_longest": [
+      1536,
+      1152,
+      1152,
+      896
+    ]
+  },
+  "models": {
+    "unet": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+    "clip": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+    "lora": "minimax_h3_turbo_v4_step600_ema.safetensors",
+    "lora_strength": 1.0,
+    "vae_video": "minimax_h3_video_vae_fp16.safetensors",
+    "vae_audio": "minimax_h3_audio_vae_fp32.safetensors"
+  },
+  "ai_settings": {
+    "schema": 2,
+    "connection": {
+      "kind": "local",
+      "provider": "comfy_gemma"
+    },
+    "roles": {
+      "director": {
+        "override": false,
+        "provider": "",
+        "model": ""
+      },
+      "character_profile": {
+        "override": false,
+        "provider": "",
+        "model": ""
+      }
+    },
+    "providers": {
+      "lmstudio": {
+        "base_url": "http://127.0.0.1:1234/v1",
+        "model": "",
+        "vision_models": [],
+        "extra": {}
+      }
+    },
+    "gemma_fallback": true,
+    "max_attempts": 3,
+    "favorites": []
+  },
+  "gpu": {
+    "mode": "auto",
+    "video_gpu": "",
+    "aux_device": "",
+    "reserve_vram_gb": 1.0
+  },
+  "shutdown": {
+    "stop_lm_studio": true
+  }
+}
