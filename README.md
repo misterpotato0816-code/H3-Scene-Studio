@@ -6,6 +6,7 @@ ComfyUI 本体・カスタムノード・モデルは同梱しません。導入
 
 > H3 自身のコードと文書は **MIT License**（[LICENSE](LICENSE)）です。外部ソフトウェアとモデルの条件は
 > [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) にまとめています（ComfyUI GPL-3.0、MiniMax H3 Community License、Gemma Terms of Use など。MIT はこれらを上書きしません）。
+> MIT の適用範囲（このリポジトリのために書かれたコードと文書のみ。実行時に使う外部ソフトウェア・カスタムノード・モデルには及びません）は [THIRD_PARTY_NOTICES.md の §0](THIRD_PARTY_NOTICES.md#0-ライセンスの適用範囲) に記載しています。
 
 ## できること（初期公開版）
 
